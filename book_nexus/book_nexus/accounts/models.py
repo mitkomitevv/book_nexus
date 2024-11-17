@@ -1,7 +1,10 @@
+from cloudinary.models import CloudinaryField
 from django.contrib.auth import get_user_model
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 from django.db import models
+
+from book_nexus.accounts.choices import GenderChoices
 from book_nexus.accounts.managers import CustomUserManager
 
 
@@ -46,7 +49,7 @@ class Profile(models.Model):
         primary_key=True,
     )
 
-    bio = models.TextField(
+    interests = models.TextField(
         blank=True,
         null=True,
     )
@@ -55,3 +58,20 @@ class Profile(models.Model):
         blank=True,
         null=True,
     )
+
+    country = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+    )
+
+    gender = models.CharField(
+        choices=GenderChoices.choices,
+        blank=True,
+        null=True,
+    )
+
+    profile_picture = CloudinaryField('image', blank=True, null=True)
+
+    def __str__(self):
+        return self.user.full_name

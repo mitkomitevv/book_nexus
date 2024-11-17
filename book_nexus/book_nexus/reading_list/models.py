@@ -4,21 +4,26 @@ from book_nexus.books.models import Book
 
 UserModel = get_user_model()
 
-class ReadingList(models.Model):
-    user = models.ForeignKey(
-        UserModel,
-        on_delete=models.CASCADE
-    )
 
-    books = models.ManyToManyField(
-        Book,
-        related_name='reading_lists'
-    )
+class WantToRead(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    book = models.ForeignKey('books.Book', on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
 
-    name = models.CharField(
-        max_length=100
-    )
 
-    description = models.TextField(
-        blank=True
-    )
+class CurrentlyReading(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    book = models.ForeignKey('books.Book', on_delete=models.CASCADE)
+    started_at = models.DateTimeField(auto_now_add=True)
+
+
+class Read(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    book = models.ForeignKey('books.Book', on_delete=models.CASCADE)
+    completed_at = models.DateTimeField(auto_now_add=True)
+
+
+class Favorites(models.Model):
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
+    book = models.ForeignKey('books.Book', on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
