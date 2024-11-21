@@ -4,38 +4,35 @@
 {% block content %}
 <div class="container mt-5">
     <div class="row">
-        <!-- Profile Details Section -->
         <div class="col-md-3 text-center">
-            <!-- User Avatar -->
-            {% if user.profile.profile_picture %}
-                <img src="{{ user.profile.profile_picture.url }}" alt="profile img" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+            {% if object.profile.profile_picture %}
+                <img src="{{ object.profile.profile_picture.url }}" alt="profile img" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
             {% else %}
                 <img src="{% static 'images/stock_profile.png' %}" alt="profile img" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
             {% endif %}
-            <h2 class="font-weight-bold">{{ user.full_name }}</h2>
+            <h2 class="font-weight-bold">{{ object.full_name }}</h2>
             <div class="profile-info">
-                <a href="{% url 'profile_edit' user.pk %}">Edit Profile</a>
-                <p><strong>Details:</strong> Age {{ age }}, {{ user.profile.get_gender_display }}, {{ user.profile.country }}</p>
-                <p><strong>Birthday:</strong> {{ user.profile.date_of_birth }}</p>
-                <p><strong>Activity:</strong> Joined in {{ user.date_joined|date:"F Y" }}, last active {{ user.last_login|date:"F Y" }}</p>
-                <p><strong>Interests:</strong> {{ user.profile.interests }}</p>
-                <p><strong>Favorite Books:</strong> {{ user.profile.favorite_books }}</p>
+                {% if request.user.pk == object.pk %}
+                    <a href="{% url 'profile_edit' object.pk %}">Edit Profile</a>
+                {% endif %}
+                <p><strong>Details:</strong> Age {{ object.age }}, {{ object.profile.get_gender_display }}, {{ object.profile.country }}</p>
+                <p><strong>Birthday:</strong> {{ object.profile.date_of_birth }}</p>
+                <p><strong>Activity:</strong> Joined in {{ object.date_joined|date:"F Y" }}, last active {{ object.last_login|date:"F Y" }}</p>
+                <p><strong>Interests:</strong> {{ object.profile.interests }}</p>
+                <p><strong>Favorite Books:</strong> {{ object.profile.favorite_books }}</p>
             </div>
         </div>
 
-        <!-- Ratings, Reviews, and Shelves Section -->
         <div class="col-md-9">
-            <!-- Stats Summary -->
             <div class="mb-4">
-                <p class="mb-1">{{ user.profile.ratings_count }} ratings ({{ user.profile.average_rating }} avg)</p>
-                <p class="mb-1">{{ user.profile.reviews_count }} reviews</p>
+                <p class="mb-1">{{ object.profile.ratings_count }} ratings ({{ object.profile.average_rating }} avg)</p>
+                <p class="mb-1">{{ object.profile.reviews_count }} reviews</p>
             </div>
-
-            <!-- Favorites Shelf -->
+        
             <div class="favorites-shelf mb-4">
-                <h4 class="font-weight-bold">{{ user.full_name|upper }}'s FAVORITES SHELF</h4>
+                <h4 class="font-weight-bold">{{ object.full_name|upper }}'s FAVORITES SHELF</h4>
                 <div class="favorites-books d-flex overflow-auto">
-                    {% for book in favorites_books %}
+                    {% for book in object.favorites_books %}
                         <div class="book-cover mx-1">
                             <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-thumbnail" style="width: 100px; height: 150px; object-fit: cover;">
                         </div>
@@ -45,7 +42,7 @@
 
             <!-- Bookshelves Summary -->
             <div class="bookshelves-summary mb-4">
-                <h5 class="font-weight-bold">{{ user.full_name|upper }}'s BOOKSHELVES</h5>
+                <h5 class="font-weight-bold">{{ object.full_name|upper }}'s BOOKSHELVES</h5>
                 <ul class="list-inline">
                     <li class="list-inline-item">read ({{ read_count }})</li>
                     <li class="list-inline-item">to-read ({{ want_to_read_count }})</li>
@@ -56,8 +53,8 @@
 
             <!-- Currently Reading Section -->
             <div class="currently-reading mb-4">
-                <h5 class="font-weight-bold">{{ user.full_name|upper }} IS CURRENTLY READING</h5>
-                {% for book in currently_reading_books %}
+                <h5 class="font-weight-bold">{{ object.full_name|upper }} IS CURRENTLY READING</h5>
+                {% for book in object.currently_reading_books %}
                     <div class="d-flex align-items-center mb-2">
                         <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-thumbnail mr-3" style="width: 80px; height: 120px; object-fit: cover;">
                         <div>

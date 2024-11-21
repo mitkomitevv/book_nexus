@@ -50,16 +50,37 @@ class CustomAuthenticationForm(AuthenticationForm):
                 )
         return self.cleaned_data
 
+
 class ProfileEditForm(forms.ModelForm):
+    full_name = forms.CharField(max_length=255, required=True)
+
     class Meta:
         model = Profile
         exclude = ('user',)
-
         widgets = {
-            'date_of_birth': forms.DateInput(attrs={'type': 'date'}),
+            'date_of_birth': forms.DateInput(
+                attrs={'type': 'date'},
+                format='%Y-%m-%d'
+            ),
         }
 
     def __init__(self, *args, **kwargs):
-        super(ProfileEditForm, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if self.instance and self.instance.date_of_birth:
-            self.fields['date_of_birth'].initial = self.instance.date_of_birth.strftime('%Y-%m-%d')
+            formatted_date = self.instance.date_of_birth.strftime('%Y-%m-%d')
+            self.initial['date_of_birth'] = formatted_date
+
+        if self.instance and hasattr(self.instance, 'user') and self.instance.user:
+            self.fields['full_name'].initial = self.instance.user.full_name
+
+    def save(self, commit=True):
+        profile = super().save(commit=False)
+
+        if profile.user:
+            profile.user.full_name = self.cleaned_data['full_name']
+            profile.user.save()
+
+        if commit:
+            profile.save()
+
+        return profile

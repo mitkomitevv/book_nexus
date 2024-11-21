@@ -1,0 +1,59 @@
+{% extends 'common/base.html' %}
+
+{% block content %}
+
+    <body>
+
+    <div class="container mt-5">
+        <div class="card p-4">
+            <h5 class="card-title">Rate This Book:</h5>
+            <input id="input-id" type="text" class="rating" data-size="lg" data-theme="krajee-fas">
+        </div>
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            // Initialize the star rating with Krajee's default theme
+            $("#input-id").rating({
+                theme: 'krajee-fas',
+                starCaptions: function (rating) {
+                    return rating + ' Stars';
+                },
+                filledStar: '<i class="fas fa-star"></i>',
+                emptyStar: '<i class="far fa-star"></i>'
+            });
+
+            // Automatically submit the rating when the user selects it
+            $('#input-id').on('rating:change', function (event, value, caption) {
+                alert("You rated this book: " + value + " stars");
+                // You can replace this alert with your actual form submission logic, for example:
+
+                // $.ajax({
+                //     url: '/your-rating-endpoint/',
+                //     method: 'POST',
+                //     data: { rating: value },
+                //     success: function(response) {
+                //         alert('Rating submitted successfully');
+                //     },
+                //     error: function(xhr, status, error) {
+                //         alert('Failed to submit rating');
+                //     }
+                // });
+            });
+        });
+    </script>
+
+    <!-- Include Bootstrap JS -->
+    {#    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>#}
+    </body>
+
+
+{% endblock %}
+
+
+
+
+
+
+
+

@@ -26,7 +26,7 @@ class UserLoginView(LoginView):
 
 class UserDetailsView(LoginRequiredMixin, DetailView):
     model = UserModel
-    template_name = 'accounts/details.html'
+    template_name = 'accounts/profile-details.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
