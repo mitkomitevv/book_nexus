@@ -1,53 +1,243 @@
 {% extends 'common/base.html' %}
 
 {% block content %}
+    <div class="container py-4">
+        <div class="row">
+            <!-- Left Section: Cover -->
+                <div class="col-12 col-md-4 col-lg-3 mb-8 book-cover-container d-flex flex-column align-items-center">
+                <!-- Book Cover -->
+                <div class="position-relative">
+                    <img src="{{ book.cover.url }}" alt="Book Cover" class="cover-image mb-4 rounded">
+                    <!-- Dropdown positioned relative to the image -->
+                    <div class="position-absolute w-100 d-flex justify-content-center" style="bottom: -20px;">
+                        {% include 'books/read-status-dropdown.html' %}
+                    </div>
+                </div>
 
-    <body>
+                <!-- Rating Section -->
+                <div class="text-center mt-4">
+                    <div class="d-flex align-items-center mt-3 stars-my-rating">
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                        <input id="input-{{ book.pk }}" name="rating" type="number" class="rating"
+                               data-size="xs" data-book-id="{{ book.pk }}"
+                               data-show-clear="true" data-show-caption="false" data-theme="krajee-fas"
+                               data-url="{% url 'rate-book' book.pk %}"
+                                {% if user_rating %}
+                                    value="{{ user_rating }}"
+                                {% endif %}
+                        >
+                    </div>
+                </div>
+            </div>
 
-    <div class="container mt-5">
-        <div class="card p-4">
-            <h5 class="card-title">Rate This Book:</h5>
-            <input id="input-id" type="text" class="rating" data-size="lg" data-theme="krajee-fas">
+            <!-- Right Section: Details -->
+            <div class="col-lg-9 col-md-8 scrollable-right book-details-container">
+                <a href="" class="text-decoration-none">
+                    <h5 class="text-muted">
+                        {% if book.series_books.first.series.name %}
+                            {% with book.series_books.first as series_book %}
+                                {{ series_book.series.name|default:"" }}, #
+                                {{ series_book.number }}
+                            {% endwith %}
+                        {% endif %}
+                    </h5>
+                </a>
+                <h1 class="fw-bold">{{ book.title }}</h1>
+                <h5 class="text-secondary">
+                    {% if book.authors.exists %}
+                        {% for author in book.authors.all %}
+                            <small class="text-muted">
+                                {{ author.name }}{% if not forloop.last %}, {% endif %}</small>
+                        {% endfor %}
+                    {% else %}
+                        <small class="text-muted">Author of {{ book.title }}</small>
+                    {% endif %}
+                </h5>
+                <div class="d-flex align-items-center my-3 mb-0 mt-0">
+                    <span class="text-warning stars">
+                        {% for i in "12345" %}
+                            {% if average_rating >= forloop.counter %}
+                                <i class="fas fa-star"></i>
+                            {% elif average_rating >= forloop.counter0|add:0.5 %}
+                                <i class="fas fa-star-half-alt"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+                    <span class="average-rating">{{ average_rating|default:'' }}</span>
+                    <span class="rating-count-review">
+                        {% if rating_count != 1 %}
+                            <small class="text-muted">{{ rating_count }} ratings</small>
+                        {% else %}
+                            <small class="text-muted">{{ rating_count }} rating</small>
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div id="summary-container" class="text-container mb-3">
+                    <p id="summary-text" class="text-truncate">
+                        {{ book.summary }}
+                    </p>
+                    <button id="toggle-summary" class="btn btn-link p-0 text-dark text-decoration-none">
+                        Show more ▼
+                    </button>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    <h6>Genres</h6>
+                    <span class="badge text-dark ">{{ book.genre }}</span>
+                </div>
+
+                <h6>Details</h6>
+                <ul class="list-unstyled">
+                    <li>{{ book.pages }} pages</li>
+                    <li>First published {{ book.publication_date }}</li>
+                </ul>
+                <!-- Add reviews or other sections here -->
+
+                {% include 'reviews/write-show-reviews.html' %}
+
+            </div>
         </div>
     </div>
-
     <script>
+        // Initialize reading list handlers only once when document is ready
         $(document).ready(function () {
-            // Initialize the star rating with Krajee's default theme
-            $("#input-id").rating({
-                theme: 'krajee-fas',
-                starCaptions: function (rating) {
-                    return rating + ' Stars';
-                },
-                filledStar: '<i class="fas fa-star"></i>',
-                emptyStar: '<i class="far fa-star"></i>'
-            });
-
-            // Automatically submit the rating when the user selects it
-            $('#input-id').on('rating:change', function (event, value, caption) {
-                alert("You rated this book: " + value + " stars");
-                // You can replace this alert with your actual form submission logic, for example:
-
-                // $.ajax({
-                //     url: '/your-rating-endpoint/',
-                //     method: 'POST',
-                //     data: { rating: value },
-                //     success: function(response) {
-                //         alert('Rating submitted successfully');
-                //     },
-                //     error: function(xhr, status, error) {
-                //         alert('Failed to submit rating');
-                //     }
-                // });
+            // Use event delegation to handle all reading list actions
+            $(document).on('click', '.reading-list-dropdown .dropdown-item', function (e) {
+                e.preventDefault();
+    
+                const dropdownContainer = $(this).closest('.reading-list-dropdown');
+                const bookId = dropdownContainer.data('book-id');
+                const action = $(this).data('action');
+                const listType = $(this).data('list-type');
+                const dropdownButton = dropdownContainer.find('.dropdown-toggle');
+                const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+    
+                const url = action === 'add' 
+                    ? '{% url "add-to-reading-list" %}'
+                    : '{% url "remove-from-reading-list" %}';
+    
+                const data = action === 'add'
+                    ? { book_id: bookId, list_type: listType }
+                    : { book_id: bookId };
+    
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: data,
+                    success: function (response) {
+                        if (response.success) {
+                            if (action === 'add') {
+                                // Update button text based on list type
+                                const buttonText = {
+                                    'want_to_read': 'Want to Read',
+                                    'currently_reading': 'Currently Reading',
+                                    'read': 'Read',
+                                    'favorites': 'Favorites'
+                                }[listType];
+                                dropdownButton.text(buttonText);
+                            } else {
+                                dropdownButton.text('Add to List');
+                            }
+                        } else {
+                            console.error(`Failed to ${action} list: ${response.message}`);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert(`Failed to ${action} reading list`);
+                    }
+                });
             });
         });
     </script>
 
-    <!-- Include Bootstrap JS -->
-    {#    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>#}
-    </body>
+    <script>
+        $(document).ready(function () {
+            console.log('Star rating script loaded');
+            // Initialize star rating for all rating inputs
+            $(".rating").each(function () {
+                var $ratingInput = $(this);
+                var ratingUrl = $ratingInput.data('url');  // Get the URL to submit the rating
+                var ratingValue = $ratingInput.val();  // Get the initial rating value for display
 
+                // Initialize the Krajee star rating plugin
+                $ratingInput.rating({
+                    theme: 'krajee-fas',
+                    filledStar: '<i class="fas fa-star"></i>',
+                    emptyStar: '<i class="far fa-star"></i>',
+                    showCaption: false,  // Hide caption below stars
+                    showClear: true,  // Enable clear button
+                    step: 0.5,  // Allow half-star ratings
+                    value: ratingValue  // Set initial value
+                }).on('rating:change', function (event, value) {
+                    // Fetch CSRF token for secure requests
+                    var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
 
+                    // Make AJAX POST request to save the rating
+                    $.ajax({
+                        url: ratingUrl,
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        data: {
+                            rating: value
+                        },
+                        success: function (response) {
+                            if (!response.success) {
+                                console.error('Failed to submit rating: ' + response.message);
+                            }
+                        },
+                        error: function () {
+                            console.error('Failed to submit rating');
+                        }
+                    });
+                }).on('rating:clear', function (event) {
+                    // Handle clearing the rating
+                    var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+
+                    $.ajax({
+                        url: ratingUrl,
+                        method: 'DELETE',  // Changed method to DELETE to represent removing the rating
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        success: function (response) {
+                            if (!response.success) {
+                                console.error('Failed to clear rating: ' + response.message);
+                            }
+                        },
+                        error: function () {
+                            console.error('Failed to clear rating');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const summaryText = document.getElementById("summary-text");
+            const toggleSummary = document.getElementById("toggle-summary");
+    
+            toggleSummary.addEventListener("click", function (event) {
+                event.preventDefault(); // Prevent the default anchor behavior
+    
+                if (summaryText.classList.contains("text-truncate")) {
+                    summaryText.classList.remove("text-truncate");
+                    toggleSummary.textContent = "Show less ▲";
+                } else {
+                    summaryText.classList.add("text-truncate");
+                    toggleSummary.textContent = "Show more ▼";
+                }
+            });
+        });
+    </script>
 {% endblock %}
 
 

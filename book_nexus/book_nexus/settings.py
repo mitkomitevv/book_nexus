@@ -41,8 +41,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'rest_framework',
+    'drf_spectacular',
     'cloudinary',
     'cloudinary_storage',
+    'django_select2',
 
     'book_nexus.accounts.apps.AccountsConfig',
     'book_nexus.books.apps.BooksConfig',
@@ -50,6 +52,18 @@ INSTALLED_APPS = [
     'book_nexus.common.apps.CommonConfig',
     'book_nexus.api.apps.ApiConfig'
 ]
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Book Nexus',
+    'DESCRIPTION': 'Book Nexus is a book Nexus project.',
+    'VERSION': '0.1.0',
+}
 
 
 CLOUDINARY_STORAGE = {
@@ -147,6 +161,8 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static'
 ]
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

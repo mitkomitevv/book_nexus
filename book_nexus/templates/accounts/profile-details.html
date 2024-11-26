@@ -15,7 +15,7 @@
                 {% if request.user.pk == object.pk %}
                     <a href="{% url 'profile_edit' object.pk %}">Edit Profile</a>
                 {% endif %}
-                <p><strong>Details:</strong> Age {{ object.age }}, {{ object.profile.get_gender_display }}, {{ object.profile.country }}</p>
+                <p><strong>Details:</strong> Age {{ age }}, {{ object.profile.get_gender_display }}, {{ object.profile.country }}</p>
                 <p><strong>Birthday:</strong> {{ object.profile.date_of_birth }}</p>
                 <p><strong>Activity:</strong> Joined in {{ object.date_joined|date:"F Y" }}, last active {{ object.last_login|date:"F Y" }}</p>
                 <p><strong>Interests:</strong> {{ object.profile.interests }}</p>

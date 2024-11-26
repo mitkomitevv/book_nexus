@@ -14,10 +14,10 @@ class UserReadingListMixin(ContextMixin):
         favorites_books = Favorites.objects.filter(user=user).values_list('book_id', flat=True)
 
         return {
-            'want_to_read_books': want_to_read_books,
-            'currently_reading_books': currently_reading_books,
-            'read_books': read_books,
-            'favorites_books': favorites_books
+            'want_to_read_books': set(want_to_read_books),
+            'currently_reading_books': set(currently_reading_books),
+            'read_books': set(read_books),
+            'favorites_books': set(favorites_books)
         }
 
     def get_context_data(self, **kwargs):

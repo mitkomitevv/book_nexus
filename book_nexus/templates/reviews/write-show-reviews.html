@@ -1,0 +1,304 @@
+{% load static %}
+
+<hr>
+{% if user.is_authenticated %}
+    {% if user_review %}
+        <h5 class="card-title">Your Review</h5>
+        <div class="card mt-2">
+            <div class="card-body">
+                <p>{{ user_review.content }}</p>
+                <button id="edit-review-btn" class="btn btn-outline-success">Edit Review</button>
+
+                <form id="edit-review-form" action="{% url 'edit-review' user_review.pk %}" method="post"
+                      class="d-none">
+                    {% csrf_token %}
+                    <textarea name="content" rows="4" class="form-control">{{ user_review.content }}</textarea>
+                    <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
+                    <button type="button" id="cancel-edit-btn" class="btn btn-secondary mt-2">Cancel</button>
+                </form>
+                <button id="delete-review-btn" class="btn btn-outline-danger" data-review-id="{{ user_review.pk }}">
+                    Delete
+                    Review
+                </button>
+            </div>
+        </div>
+    {% else %}
+        <!-- Show write review form -->
+        <div class="mt-4">
+            <h5 class="card-title mb-3">Write a Review</h5>
+            <form method="post" action="{% url 'add-review' book.pk %}">
+                {% csrf_token %}
+                {{ review_form.as_p }}
+                <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+        </div>
+    {% endif %}
+{% endif %}
+<hr>
+<h5>Reviews</h5>
+{% for review_data in reviews %}
+    <div class="mb-4 mt-5">
+        <div class="card-body d-flex">
+            <!-- Reviewer Avatar -->
+            <div class="me-4">
+                {% if review_data.profile.profile_picture %}
+                    <img src="{{ review_data.profile.profile_picture.url }}"
+                         alt="{{ review_data.review.user.full_name }}" class="rounded-circle" width="60" height="60">
+                {% else %}
+                    <img src="{% static 'images/stock_profile.png' %}" alt="Default Avatar" class="rounded-circle"
+                         width="60" height="60">
+                {% endif %}
+            </div>
+
+            <!-- Review Content -->
+            <div class="flex-grow-1">
+                <!-- Reviewer Name and Review Count -->
+                <div class="d-flex align-items-center mb-2">
+                    <div>
+                        <h5 class="mb-0">{{ review_data.review.user.full_name }}</h5>
+                        <small class="text-muted">{{ review_data.review.user.review_set.count }} reviews</small>
+                    </div>
+                </div>
+
+                <!-- Rating Stars -->
+                <div class="mb-2">
+                    {% with review_rating=review_data.rating.rating %}
+                        {% if review_rating %}
+                            {% for i in "12345" %}
+                                {% if review_rating >= forloop.counter %}
+                                    <i class="fas fa-star text-warning"></i> <!-- Full star -->
+                                {% elif review_rating >= forloop.counter0|add:0.5 %}
+                                    <i class="fas fa-star-half-alt text-warning"></i> <!-- Half star -->
+                                {% else %}
+                                    <i class="far fa-star text-warning"></i> <!-- Empty star -->
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <small class="text-muted">No rating given</small>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                <!-- Review Content -->
+                <div>
+                    <p><em>{{ review_data.review.tagline }}</em></p>
+                    <p>{{ review_data.review.content }}</p>
+                </div>
+
+                <!-- Review Date -->
+                <small class="text-muted">{{ review_data.review.created_at|date:"F d, Y" }}</small>
+
+                {% include 'reviews/review_comments.html' %}
+
+                <hr>
+            </div>
+        </div>
+    </div>
+{% empty %}
+    <p>No reviews yet. Be the first to write a review!</p>
+{% endfor %}
+
+{% if paginated_reviews.paginator.num_pages > 1 %}
+    <nav aria-label="Reviews pagination" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if paginated_reviews.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; First</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ paginated_reviews.previous_page_number }}">Previous</a>
+                </li>
+            {% endif %}
+
+            {% for num in paginated_reviews.paginator.page_range %}
+                {% if paginated_reviews.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > paginated_reviews.number|add:'-3' and num < paginated_reviews.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if paginated_reviews.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ paginated_reviews.next_page_number }}">Next</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ paginated_reviews.paginator.num_pages }}">Last &raquo;</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}
+
+
+{#Edit/Delete Reviews#}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const editReviewBtn = document.getElementById("edit-review-btn");
+        const editReviewForm = document.getElementById("edit-review-form");
+        const cancelEditBtn = document.getElementById("cancel-edit-btn");
+        const deleteReviewBtn = document.getElementById("delete-review-btn");
+
+        // Edit review functionality
+        if (editReviewBtn) {
+            editReviewBtn.addEventListener("click", function () {
+                editReviewBtn.classList.add("d-none");
+                deleteReviewBtn.classList.add("d-none"); // Hide Delete button while editing
+                editReviewForm.classList.remove("d-none");
+            });
+        }
+
+        if (cancelEditBtn) {
+            cancelEditBtn.addEventListener("click", function () {
+                editReviewForm.classList.add("d-none");
+                editReviewBtn.classList.remove("d-none");
+                deleteReviewBtn.classList.remove("d-none"); // Show Delete button after canceling
+            });
+        }
+
+        if (editReviewForm) {
+            editReviewForm.addEventListener("submit", function (e) {
+                e.preventDefault();  // Prevent the form from submitting normally
+
+                const url = editReviewForm.action;
+                const formData = new FormData(editReviewForm);
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: formData,
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Update the review content on the page
+                            document.querySelector(".card-body p").innerText = formData.get("content");
+                            // Hide the form and show the "Edit" and "Delete" buttons again
+                            editReviewForm.classList.add("d-none");
+                            editReviewBtn.classList.remove("d-none");
+                            deleteReviewBtn.classList.remove("d-none");
+                        } else {
+                            console.error('Error:', data.message);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error('Error:', error);
+                    });
+            });
+        }
+
+        // Delete review functionality
+        if (deleteReviewBtn) {
+            deleteReviewBtn.addEventListener("click", function (e) {
+                e.preventDefault();
+
+                const reviewId = deleteReviewBtn.dataset.reviewId;  // Get the correct reviewId from data attribute
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                if (!reviewId) {
+                    console.error('Review ID is missing');
+                    return;
+                }
+
+                // Use POST method to delete the review
+                fetch(`/books/delete-review/${reviewId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Refresh the page after successful deletion
+                            location.reload();
+                        } else {
+                            console.error('Failed to delete review:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            });
+        }
+    });
+</script>
+
+{#Comments#}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Toggle Comments Functionality
+        document.querySelectorAll(".toggle-comments").forEach(button => {
+            button.addEventListener("click", function () {
+                const reviewId = button.dataset.reviewId;
+                const commentsContainer = document.getElementById(`comments-container-${reviewId}`);
+                commentsContainer.classList.toggle("d-none");
+            });
+        });
+
+        // Add Comment Functionality
+        document.querySelectorAll(".add-comment-form").forEach(form => {
+            form.addEventListener("submit", function (e) {
+                e.preventDefault();
+                const reviewId = form.dataset.reviewId;
+                const formData = new FormData(form);
+                const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
+
+                fetch(`/books/add-comment/${reviewId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();  // Reload page to show the new comment
+                        } else {
+                            console.error('Error:', data.message);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+
+        // Load More Comments Functionality
+        document.querySelectorAll(".load-more-comments").forEach(button => {
+            button.addEventListener("click", function () {
+                const reviewId = button.dataset.reviewId;
+                const commentsContainer = document.getElementById(`comments-container-${reviewId}`);
+                let page = button.dataset.page ? parseInt(button.dataset.page) + 1 : 2;
+
+                fetch(`/books/load-more-comments/${reviewId}/?page=${page}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        data.comments.forEach(comment => {
+                            const commentHtml = `
+                                <div class="comment">
+                                    <strong>${comment.user}</strong>
+                                    <p>${comment.content}</p>
+                                    <small class="text-muted">${comment.created_at}</small>
+                                </div>
+                            `;
+                            commentsContainer.insertAdjacentHTML('beforeend', commentHtml);
+                        });
+                        if (!data.has_next) {
+                            button.remove();
+                        } else {
+                            button.dataset.page = page;
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+</script>

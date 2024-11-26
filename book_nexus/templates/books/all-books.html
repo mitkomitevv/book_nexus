@@ -14,36 +14,50 @@
                                 <!-- Book Cover Image -->
                                 <a href="{% url 'book-details' book.pk %}">
                                     <img src="{{ book.cover.url }}"
-                                         alt="{{ book.title }}" class="img-fluid rounded">
+                                         alt="{{ book.title }}" class="img-fluid rounded cover-image">
                                 </a>
                             </div>
                             <div class="col-md-10">
                                 <div class="card-body">
-
                                     <!-- Book Title -->
                                     <div class="d-flex align-items-center">
                                         <a href="{% url 'book-details' book.pk %}" class="text-decoration-none">
-                                            <h5 class="card-title"> {{ book.title }} </h5>
+                                            <h5 class="text-muted fw-bold"> {{ book.title }} </h5>
                                         </a>
                                         <a href="" class="text-decoration-none ms-2">
-                                            <h5>(Mistborn, #1)</h5>
+                                            <h5 class="text-muted">
+                                                {% if book.series_books.first.series.name %}
+                                                    {% with book.series_books.first as series_book %}
+                                                        ({{ series_book.series.name|default:"" }}, #
+                                                        {{ series_book.number }})
+                                                    {% endwith %}
+                                                {% endif %}
+                                            </h5>
                                         </a>
                                     </div>
 
                                     <!-- Author -->
                                     <p class="card-text">
-                                        <small class="text-muted">by Brandon Sanderson</small>
+                                        <small class="text-muted">by</small>
+                                        {% if book.authors.exists %}
+                                            {% for author in book.authors.all %}
+                                                <small class="text-muted">
+                                                    {{ author.name }}{% if not forloop.last %}, {% endif %}</small>
+                                            {% endfor %}
+                                        {% else %}
+                                            <small class="text-muted">Author of {{ book.title }}</small>
+                                        {% endif %}
                                     </p>
                                     <p class="card-text">
                                         <span class="text-warning">
                                             {% with average_rating=book.average_rating %}
                                                 {% for i in "12345" %}
                                                     {% if average_rating >= forloop.counter %}
-                                                        <i class="fas fa-star"></i> <!-- Full star icon -->
+                                                        <i class="fas fa-star"></i>
                                                     {% elif average_rating >= forloop.counter0|add:0.5 %}
-                                                        <i class="fas fa-star-half-alt"></i> <!-- Half star icon -->
+                                                        <i class="fas fa-star-half-alt"></i>
                                                     {% else %}
-                                                        <i class="far fa-star"></i> <!-- Empty star icon -->
+                                                        <i class="far fa-star"></i>
                                                     {% endif %}
                                                 {% endfor %}
                                             {% endwith %}
@@ -58,29 +72,7 @@
                                         {% endif %}
                                     </p>
                                     <div class="d-flex align-items-center mb-0">
-                                        <div class="dropdown">
-                                            <button class="btn btn-outline-primary btn-sm dropdown-toggle" type="button" id="readingListDropdown-{{ book.pk }}" data-bs-toggle="dropdown" aria-expanded="false">
-                                                {% if book.pk in want_to_read_books %}
-                                                    Want to Read
-                                                {% elif book.pk in currently_reading_books %}
-                                                    Currently Reading
-                                                {% elif book.pk in read_books %}
-                                                    Read
-                                                {% elif book.pk in favorites_books %}
-                                                    Favorites
-                                                {% else %}
-                                                    Add to List
-                                                {% endif %}
-                                            </button>
-
-                                            <ul class="dropdown-menu" aria-labelledby="readingListDropdown-{{ book.pk }}">
-                                                <li><a class="dropdown-item add-to-list" href="#" data-book-id="{{ book.pk }}" data-list-type="want_to_read">Want to Read</a></li>
-                                                <li><a class="dropdown-item add-to-list" href="#" data-book-id="{{ book.pk }}" data-list-type="currently_reading">Currently Reading</a></li>
-                                                <li><a class="dropdown-item add-to-list" href="#" data-book-id="{{ book.pk }}" data-list-type="read">Read</a></li>
-                                                <li><a class="dropdown-item add-to-list" href="#" data-book-id="{{ book.pk }}" data-list-type="favorites">Favorites</a></li>
-                                                <li><a class="dropdown-item remove-from-list" href="#" data-book-id="{{ book.pk }}">Remove from List</a></li>
-                                            </ul>
-                                        </div>
+                                        {% include 'books/read-status-dropdown.html' %}
                                         {% if book.user_rating %}
                                             <small class="text-muted">My rating:</small>
                                         {% else %}
@@ -93,20 +85,106 @@
                                                data-show-clear="true" data-show-caption="true" data-theme="krajee-fas"
                                                data-url="{% url 'rate-book' book.pk %}"
                                                 {% if book.user_rating %}
-                                               value="{{ book.user_rating }}"
+                                                    value="{{ book.user_rating }}"
                                                 {% endif %}
                                         >
                                     </div>
-                                    <!-- User Rating -->
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-center gap-2 mt-0">
+                                <a href="{% url 'book-edit' book.pk %}"
+                                   class="btn btn-outline-primary col-4 btn-sm"
+                                   role="button">Edit Book</a>
+                                <button type="button"
+                                        class="btn btn-outline-danger col-4 btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal{{ book.pk }}">Delete Book
+                                </button>
+                            </div>
+                            <div class="modal fade" id="deleteModal{{ book.pk }}" tabindex="-1"
+                                 aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Confirm Deletion</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                    aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            Are you sure you want to delete "{{ book.title }}"?
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary"
+                                                    data-bs-dismiss="modal">Cancel
+                                            </button>
+                                            <a href="{% url 'book-delete' book.pk %}" class="btn btn-danger">Delete</a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    <hr style="border-top: 1px solid black;">
                 {% endfor %}
             </div>
         </div>
     </div>
-
+    
+    <script>
+        // Initialize reading list handlers only once when document is ready
+        $(document).ready(function () {
+            // Use event delegation to handle all reading list actions
+            $(document).on('click', '.reading-list-dropdown .dropdown-item', function (e) {
+                e.preventDefault();
+    
+                const dropdownContainer = $(this).closest('.reading-list-dropdown');
+                const bookId = dropdownContainer.data('book-id');
+                const action = $(this).data('action');
+                const listType = $(this).data('list-type');
+                const dropdownButton = dropdownContainer.find('.dropdown-toggle');
+                const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+    
+                const url = action === 'add' 
+                    ? '{% url "add-to-reading-list" %}'
+                    : '{% url "remove-from-reading-list" %}';
+    
+                const data = action === 'add'
+                    ? { book_id: bookId, list_type: listType }
+                    : { book_id: bookId };
+    
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: data,
+                    success: function (response) {
+                        if (response.success) {
+                            if (action === 'add') {
+                                // Update button text based on list type
+                                const buttonText = {
+                                    'want_to_read': 'Want to Read',
+                                    'currently_reading': 'Currently Reading',
+                                    'read': 'Read',
+                                    'favorites': 'Favorites'
+                                }[listType];
+                                dropdownButton.text(buttonText);
+                            } else {
+                                dropdownButton.text('Add to List');
+                            }
+                        } else {
+                            console.error(`Failed to ${action} list: ${response.message}`);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert(`Failed to ${action} reading list`);
+                    }
+                });
+            });
+        });
+    </script>
+    
     <script>
         $(document).ready(function () {
             // Initialize star rating for all rating inputs
@@ -166,112 +244,6 @@
                             console.error('Failed to clear rating');
                         }
                     });
-                });
-            });
-        });
-    </script>
-{#    <script>#}
-{#        function addToList(bookId, listType) {#}
-{#            const csrfToken = '{{ csrf_token }}';#}
-{#            $.ajax({#}
-{#                url: '{% url "add-to-reading-list" %}',  // Update this to point to the view handling the action#}
-{#                method: 'POST',#}
-{#                headers: {#}
-{#                    'X-CSRFToken': csrfToken#}
-{#                },#}
-{#                data: {#}
-{#                    book_id: bookId,#}
-{#                    list_type: listType#}
-{#                },#}
-{#                success: function(response) {#}
-{#                    if (response.success) {#}
-{#                        alert('Book added successfully to ' + listType.replace('_', ' ') + '!');#}
-{#                    } else {#}
-{#                        alert('Failed to add book: ' + response.message);#}
-{#                    }#}
-{#                },#}
-{#                error: function(xhr, status, error) {#}
-{#                    alert('Failed to add book to the list');#}
-{#                }#}
-{#            });#}
-{#        }#}
-{#    </script>#}
-    <script>
-        $(document).ready(function () {
-            // Add book to a specific reading list
-            $('.add-to-list').click(function (e) {
-                e.preventDefault();
-        
-                var bookId = $(this).data('book-id');
-                var listType = $(this).data('list-type');
-                var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
-        
-                $.ajax({
-                    url: '{% url "add-to-reading-list" %}',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
-                    data: {
-                        book_id: bookId,
-                        list_type: listType
-                    },
-                    success: function (response) {
-                        if (response.success) {
-                            // Update button text to reflect the current selection
-                            var dropdownButton = $('#readingListDropdown-' + bookId);
-                            switch (listType) {
-                                case 'want_to_read':
-                                    dropdownButton.text('Want to Read');
-                                    break;
-                                case 'currently_reading':
-                                    dropdownButton.text('Currently Reading');
-                                    break;
-                                case 'read':
-                                    dropdownButton.text('Read');
-                                    break;
-                                case 'favorites':
-                                    dropdownButton.text('Favorites');
-                                    break;
-                            }
-                        } else {
-                            console.error('Failed to add to list: ' + response.message);
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        alert('Failed to add to reading list');
-                    }
-                });
-            });
-        
-            // Remove book from reading list
-            $('.remove-from-list').click(function (e) {
-                e.preventDefault();
-        
-                var bookId = $(this).data('book-id');
-                var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
-        
-                $.ajax({
-                    url: '{% url "remove-from-reading-list" %}',
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
-                    data: {
-                        book_id: bookId
-                    },
-                    success: function (response) {
-                        if (response.success) {
-                            // Update button text to reflect no list selection
-                            var dropdownButton = $('#readingListDropdown-' + bookId);
-                            dropdownButton.text('Add to List');
-                        } else {
-                            console.error('Failed to remove from list: ' + response.message);
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        alert('Failed to remove from reading list');
-                    }
                 });
             });
         });

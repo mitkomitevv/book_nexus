@@ -3,7 +3,7 @@
     <div class="container pb-5 mb-5">
         <div class="row justify-content-center">
             <div class="col-lg-6 col-md- col-sm-12 mx-auto">
-                <h1 class="text-center mb-4">Add Book</h1>
+                <h1 class="text-center mb-4">Edit Book</h1>
                 <form method="post" enctype="multipart/form-data" class="mb-5">
                     {% csrf_token %}
                     <div class="mx-auto">
@@ -24,7 +24,10 @@
                                 {{ field.errors }}
                             {% elif field.name == 'series' %}
                                 {{ field }}
-                                {{ field.errors }}    
+                                {{ field.errors }}
+                            {% elif field.name == 'publication_date' %}
+                                    {{ field }}
+                                    {{ field.errors }}    
                             {% else %}
                             {{ field.errors }}
                                 <input
@@ -39,7 +42,7 @@
                             </div>
                         {% endfor %}
                         <div class="d-grid gap-2 mt-4 mb-4">
-                            <button class="btn btn-dark" type="submit">Add Book</button>
+                            <button class="btn btn-dark" type="submit">Edit Book</button>
                         </div>
                     </div>
                 </form>

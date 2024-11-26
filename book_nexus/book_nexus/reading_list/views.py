@@ -1,77 +1,57 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db import transaction
 from django.http import JsonResponse
 from django.views import View
 from django.shortcuts import get_object_or_404
 from .models import WantToRead, CurrentlyReading, Read, Favorites, Book
 
 
-# class AddToReadingListView(LoginRequiredMixin, View):
-#     def post(self, request):
-#         book_id = request.POST.get('book_id')
-#         list_type = request.POST.get('list_type')
-#
-#         book = get_object_or_404(Book, pk=book_id)
-#
-#         try:
-#             if list_type == 'want_to_read':
-#                 WantToRead.objects.get_or_create(user=request.user, book=book)
-#             elif list_type == 'currently_reading':
-#                 CurrentlyReading.objects.get_or_create(user=request.user, book=book)
-#             elif list_type == 'read':
-#                 Read.objects.get_or_create(user=request.user, book=book)
-#             elif list_type == 'favorites':
-#                 Favorites.objects.get_or_create(user=request.user, book=book)
-#             else:
-#                 return JsonResponse({'success': False, 'message': 'Invalid list type.'})
-#             return JsonResponse({'success': True})
-#         except Exception as e:
-#             return JsonResponse({'success': False, 'message': str(e)})
-#
-#
-# class RemoveFromReadingListView(View):
-#     def post(self, request):
-#         book_id = request.POST.get('book_id')
-#         user = request.user
-#
-#         if not book_id:
-#             return JsonResponse({'success': False, 'message': 'Invalid book ID'})
-#
-#         # Remove the book from all the user's reading lists
-#         WantToRead.objects.filter(user=user, book_id=book_id).delete()
-#         CurrentlyReading.objects.filter(user=user, book_id=book_id).delete()
-#         Read.objects.filter(user=user, book_id=book_id).delete()
-#         Favorites.objects.filter(user=user, book_id=book_id).delete()
-#
-#         return JsonResponse({'success': True, 'message': 'Book removed from all reading lists.'})
+class AddToReadingListView(LoginRequiredMixin, View):
+    VALID_LIST_TYPES = {
+        'want_to_read': WantToRead,
+        'currently_reading': CurrentlyReading,
+        'read': Read,
+        'favorites': Favorites
+    }
 
-
-class AddToReadingListView(View):
+    @transaction.atomic
     def post(self, request):
         if not request.user.is_authenticated:
             return JsonResponse({'success': False, 'message': 'User not authenticated.'})
 
         book_id = request.POST.get('book_id')
         list_type = request.POST.get('list_type')
-        book = get_object_or_404(Book, pk=book_id)
+
+        if list_type not in self.VALID_LIST_TYPES:
+            return JsonResponse({'success': False, 'message': 'Invalid list type.'})
 
         try:
-            WantToRead.objects.filter(user=request.user, book=book).delete()
-            CurrentlyReading.objects.filter(user=request.user, book=book).delete()
+            with transaction.atomic():
+                book = get_object_or_404(Book, pk=book_id)
 
-            if list_type == 'want_to_read':
-                WantToRead.objects.create(user=request.user, book=book)
-            elif list_type == 'currently_reading':
-                CurrentlyReading.objects.create(user=request.user, book=book)
-            elif list_type == 'read':
-                Read.objects.get_or_create(user=request.user, book=book)
-            elif list_type == 'favorites':
-                Favorites.objects.get_or_create(user=request.user, book=book)
-                Read.objects.get_or_create(user=request.user, book=book)
+                lists_to_clear = [WantToRead, CurrentlyReading]
+                if list_type != 'favorites':
+                    lists_to_clear.extend([Read, Favorites])
 
+                for model in lists_to_clear:
+                    model.objects.filter(user=request.user, book=book).delete()
 
-            return JsonResponse({'success': True, 'message': f'Book added to {list_type} list.'})
+                if list_type == 'favorites':
+                    Favorites.objects.get_or_create(user=request.user, book=book)
+                    Read.objects.get_or_create(user=request.user, book=book)
+                else:
+                    self.VALID_LIST_TYPES[list_type].objects.get_or_create(user=request.user, book=book)
+
+                return JsonResponse({
+                    'success': True,
+                    'message': f'Book added to {list_type} list.',
+                    'book_id': book_id,
+                    'list_type': list_type
+                })
+
         except Exception as e:
             return JsonResponse({'success': False, 'message': str(e)})
+
 
 class RemoveFromReadingListView(View):
     def post(self, request):
@@ -81,7 +61,6 @@ class RemoveFromReadingListView(View):
         book_id = request.POST.get('book_id')
         book = get_object_or_404(Book, pk=book_id)
 
-        # Remove the book from all user's lists
         WantToRead.objects.filter(user=request.user, book=book).delete()
         CurrentlyReading.objects.filter(user=request.user, book=book).delete()
         Read.objects.filter(user=request.user, book=book).delete()

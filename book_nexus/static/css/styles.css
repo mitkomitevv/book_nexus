@@ -1,6 +1,115 @@
-.box {
-    background-color: darkred;
-    border: 1px solid black;
-    min-height: 50px;
+.html {
+    height: 100%;
+    margin: 0;
+}
+
+.body-container {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-family: 'Merriweather', serif !important;
+    background-color: #f5f5f5;
+    color: #333;
+    overflow-x: hidden;
+}
+
+.fixed-left {
+    position: sticky;
+    top: 0;
+    max-height: 100vh;
+}
+
+.scrollable-right {
+    overflow-y: auto;
+}
+
+.cover-image {
+    width: 100%;
+    height: auto;
+    max-width: 250px;
+    max-height: 350px;
+    object-fit: cover;
+}
+
+.main {
+    flex: 1;
+}
+
+.footer-one {
+    background-color: #343a40;
+    color: white;
+    padding: 5px 0;
+    text-align: center;
+    width: 100%;
+    margin-top: auto;
+}
+
+.average-rating {
     font-size: 2rem;
+    font-weight: bold;
+    margin-left: 1rem;
+}
+
+.rating-count-review {
+    font-size: 1rem;
+    margin-left: 1rem;
+}
+
+.stars i {
+    font-size: 1.5rem;
+}
+
+.stars-my-rating i {
+    font-size: 2rem;
+}
+
+.text-container {
+        position: relative;
+        max-width: 100%;
+    }
+
+.text-truncate {
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: normal;
+}
+
+.btn-link {
+    font-size: 0.875rem; /* Adjust font size to match */
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.review {
+    background-color: #f5f5f5;
+}
+
+
+@media (min-width: 992px) {
+    .book-cover-container {
+        position: fixed;
+        top: 75px;
+        left: 75px;
+        width: 270px;
+    }
+
+    .book-details-container {
+        margin-left: 270px;
+    }
+}
+
+@media (max-width: 991px) {
+    .book-cover-container {
+        position: relative;
+        width: 100%;
+    }
+
+    .book-details-container {
+        margin-left: 0;
+    }
 }

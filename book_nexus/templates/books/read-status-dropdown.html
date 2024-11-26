@@ -1,0 +1,31 @@
+<div class="dropdown reading-list-dropdown" data-book-id="{{ book.pk }}">
+    <button class="btn btn-outline-primary btn-sm dropdown-toggle"
+            type="button" id="readingListDropdown-{{ book.pk }}" data-bs-toggle="dropdown"
+            aria-expanded="false">
+        {% if book.pk in want_to_read_books %}
+            Want to Read
+        {% elif book.pk in currently_reading_books %}
+            Currently Reading
+        {% elif book.pk in read_books %}
+            Read
+        {% elif book.pk in favorites_books %}
+            Favorites
+        {% else %}
+            Add to List
+        {% endif %}
+    </button>
+
+    <ul class="dropdown-menu"
+        aria-labelledby="readingListDropdown-{{ book.pk }}">
+        <li><a class="dropdown-item" href="#"
+               data-action="add" data-list-type="want_to_read">Want to Read</a></li>
+        <li><a class="dropdown-item" href="#"
+               data-action="add" data-list-type="currently_reading">Currently Reading</a></li>
+        <li><a class="dropdown-item" href="#"
+               data-action="add" data-list-type="read">Read</a></li>
+        <li><a class="dropdown-item" href="#"
+               data-action="add" data-list-type="favorites">Favorites</a></li>
+        <li><a class="dropdown-item" href="#"
+               data-action="remove">Remove from List</a></li>
+    </ul>
+</div>

@@ -39,6 +39,8 @@ class UserDetailsView(LoginRequiredMixin, DetailView):
         else:
             context['age'] = None
 
+        print([context['age']])
+
         context['want_to_read_count'] = WantToRead.objects.filter(user=user).count()
         context['currently_reading_count'] = CurrentlyReading.objects.filter(user=user).count()
         context['read_count'] = Read.objects.filter(user=user).count()

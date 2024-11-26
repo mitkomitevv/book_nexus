@@ -22,11 +22,25 @@ class Book(models.Model):
         null=True
     )
 
+    pages = models.PositiveIntegerField()
+
     publication_date = models.DateField(
         default=date.today
     )
 
     cover = CloudinaryField('image', blank=True, null=True)
+
+    authors = models.ManyToManyField(
+        'Author',
+        related_name='books',
+    )
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+    )
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.title
@@ -39,11 +53,6 @@ class Author(models.Model):
 
     bio = models.TextField(
         blank=True
-    )
-
-    books = models.ManyToManyField(
-        'Book',
-        related_name='authors'
     )
 
     picture = CloudinaryField('image', blank=True, null=True)
@@ -75,19 +84,36 @@ class Rating(models.Model):
 
 
 class Series(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(
+        max_length=50
+    )
+
+    authors = models.ManyToManyField(
+        'Author',
+        related_name='series'
+    )
 
     def __str__(self):
         return self.name
 
 
 class SeriesBook(models.Model):
-    series = models.ForeignKey(Series, on_delete=models.CASCADE, related_name='series_books')
-    book = models.ForeignKey('Book', on_delete=models.CASCADE, related_name='series_books')
+    series = models.ForeignKey(
+        'Series',
+        on_delete=models.CASCADE,
+        related_name='series_books'
+    )
+
+    book = models.ForeignKey(
+        'Book',
+        on_delete=models.CASCADE,
+        related_name='series_books'
+    )
+
     number = models.PositiveIntegerField()
 
     class Meta:
-        unique_together = ('series', 'number')
+        unique_together = [('series', 'number'), ('series', 'book')]
         ordering = ['number']
 
     def __str__(self):
@@ -107,7 +133,6 @@ class Review(models.Model):
     )
 
     content = models.TextField()
-    rating = models.PositiveIntegerField()
 
     created_at = models.DateTimeField(
         auto_now_add=True
