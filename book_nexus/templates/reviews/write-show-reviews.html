@@ -1,4 +1,5 @@
 {% load static %}
+{% load user_extras %}
 
 <hr>
 {% if user.is_authenticated %}
@@ -7,19 +8,25 @@
         <div class="card mt-2">
             <div class="card-body">
                 <p>{{ user_review.content }}</p>
-                <button id="edit-review-btn" class="btn btn-outline-success">Edit Review</button>
+                {% if user_review.created_at|dates_different:user_review.updated_at %}
+                    <small class="text-muted">Last updated: {{ user_review.updated_at|date:"F d, Y H:i" }}</small>
+                {% else %}
+                    <small class="text-muted">{{ user_review.created_at|date:"F d, Y H:i" }}</small>
+                {% endif %}
+                <div>
+                    <button id="edit-review-btn" class="btn btn-outline-success">Edit Review</button>
 
-                <form id="edit-review-form" action="{% url 'edit-review' user_review.pk %}" method="post"
-                      class="d-none">
-                    {% csrf_token %}
-                    <textarea name="content" rows="4" class="form-control">{{ user_review.content }}</textarea>
-                    <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
-                    <button type="button" id="cancel-edit-btn" class="btn btn-secondary mt-2">Cancel</button>
-                </form>
-                <button id="delete-review-btn" class="btn btn-outline-danger" data-review-id="{{ user_review.pk }}">
-                    Delete
-                    Review
-                </button>
+                    <form id="edit-review-form" action="{% url 'edit-review' user_review.pk %}" method="post"
+                          class="d-none">
+                        {% csrf_token %}
+                        <textarea name="content" rows="4" class="form-control">{{ user_review.content }}</textarea>
+                        <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
+                        <button type="button" id="cancel-edit-btn" class="btn btn-secondary mt-2">Cancel</button>
+                    </form>
+                    <button id="delete-review-btn" class="btn btn-outline-danger" data-review-id="{{ user_review.pk }}">
+                        Delete Review
+                    </button>
+                </div>
             </div>
         </div>
     {% else %}
@@ -36,7 +43,7 @@
 {% endif %}
 <hr>
 <h5>Reviews</h5>
-{% for review_data in reviews %}
+{% for review_data in reviews_with_comments %}
     <div class="mb-4 mt-5">
         <div class="card-body d-flex">
             <!-- Reviewer Avatar -->
@@ -86,11 +93,23 @@
                 </div>
 
                 <!-- Review Date -->
-                <small class="text-muted">{{ review_data.review.created_at|date:"F d, Y" }}</small>
+                {% if review_data.review.created_at|dates_different:review_data.review.updated_at %}
+                    <small class="text-muted">Last updated: {{ review_data.review.updated_at|date:"F d, Y H:i" }}</small>
+                {% else %}
+                    <small class="text-muted">{{ review_data.review.created_at|date:"F d, Y H:i" }}</small>
+                {% endif %}
 
-                {% include 'reviews/review_comments.html' %}
+                <!-- Comments Section -->
+                <div class="comments-section mt-4">
+                    <button class="btn btn-link open-comments-modal"
+                            data-review-id="{{ review_data.review.pk }}">
+                        <span>Comments</span>
+                        <i class="fa-regular fa-comment ms-2"></i>
+                    </button>
+                </div>
 
                 <hr>
+
             </div>
         </div>
     </div>
@@ -232,73 +251,343 @@
     });
 </script>
 
-{#Comments#}
+{#<script>#}
+{#    document.addEventListener("DOMContentLoaded", function () {#}
+{#        // Handle opening the comments modal#}
+{#        document.querySelectorAll(".open-comments-modal").forEach(button => {#}
+{#            button.addEventListener("click", function () {#}
+{#                const reviewId = button.dataset.reviewId;#}
+{#                loadCommentsModal(reviewId);#}
+{#            });#}
+{#        });#}
+{##}
+{#        function loadCommentsModal(reviewId) {#}
+{#            fetch(`/books/review-comments/${reviewId}/`, {#}
+{#                headers: {#}
+{#                    'X-Requested-With': 'XMLHttpRequest',#}
+{#                },#}
+{#            })#}
+{#                .then(response => {#}
+{#                    if (!response.ok) {#}
+{#                        throw new Error(`HTTP error! status: ${response.status}`);#}
+{#                    }#}
+{#                    return response.json();#}
+{#                })#}
+{#                .then(data => {#}
+{#                    // Insert the modal HTML into the page#}
+{#                    document.body.insertAdjacentHTML('beforeend', data.html);#}
+{#                    // Show the modal#}
+{#                    const modalElement = document.getElementById('comments-modal');#}
+{#                    const modal = new bootstrap.Modal(modalElement);#}
+{#                    modal.show();#}
+{##}
+{#                    // Initialize currentPage to 1 when modal is first opened#}
+{#                    modalElement.dataset.currentPage = '1';#}
+{##}
+{#                    // Attach event listeners#}
+{#                    attachModalEventListeners(reviewId);#}
+{##}
+{#                    // Remove the modal from DOM when hidden to prevent duplicates#}
+{#                    modalElement.addEventListener('hidden.bs.modal', function () {#}
+{#                        modalElement.remove();#}
+{#                    });#}
+{#                })#}
+{#                .catch(error => {#}
+{#                    console.error('Fetch error:', error);#}
+{#                });#}
+{#        }#}
+{##}
+{#        function attachModalEventListeners(reviewId) {#}
+{#            const modalElement = document.getElementById('comments-modal');#}
+{##}
+{#            // Handle pagination links inside the modal#}
+{#            document.querySelectorAll('#comments-modal .pagination a').forEach(link => {#}
+{#                link.addEventListener('click', function (e) {#}
+{#                    e.preventDefault();#}
+{#                    const page = this.getAttribute('data-page');#}
+{#                    // Update currentPage data attribute on the modal#}
+{#                    modalElement.dataset.currentPage = page;#}
+{#                    loadModalContent(reviewId, page);#}
+{#                });#}
+{#            });#}
+{##}
+{#            // Handle adding a new comment inside the modal#}
+{#            const form = document.getElementById('modal-add-comment-form');#}
+{#            if (form) {#}
+{#                form.addEventListener('submit', function (e) {#}
+{#                    e.preventDefault();#}
+{#                    const formData = new FormData(form);#}
+{#                    const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;#}
+{##}
+{#                    fetch(`/books/add-comment/${reviewId}/`, {#}
+{#                        method: 'POST',#}
+{#                        headers: {#}
+{#                            'X-CSRFToken': csrfToken,#}
+{#                            'X-Requested-With': 'XMLHttpRequest',#}
+{#                        },#}
+{#                        body: formData#}
+{#                    })#}
+{#                        .then(response => response.json())#}
+{#                        .then(data => {#}
+{#                            if (data.success) {#}
+{#                                // Get currentPage from modal's data attribute#}
+{#                                const currentPage = modalElement.dataset.currentPage || '1';#}
+{#                                // Reload modal content to include the new comment#}
+{#                                loadModalContent(reviewId, currentPage);#}
+{#                            } else {#}
+{#                                alert('Error adding comment.');#}
+{#                            }#}
+{#                        });#}
+{#                });#}
+{#            }#}
+{#        }#}
+{##}
+{#        function loadModalContent(reviewId, page = 1) {#}
+{#            fetch(`/books/review-comments/${reviewId}/?page=${page}`, {#}
+{#                headers: {#}
+{#                    'X-Requested-With': 'XMLHttpRequest',#}
+{#                },#}
+{#            })#}
+{#                .then(response => response.json())#}
+{#                .then(data => {#}
+{#                    // Instead of replacing entire modal content, update specific sections#}
+{#                    const commentsContainer = document.querySelector('#comments-modal .modal-body');#}
+{##}
+{#                    // Create a temporary div to parse the HTML#}
+{#                    const tempDiv = document.createElement('div');#}
+{#                    tempDiv.innerHTML = data.html;#}
+{##}
+{#                    // Update comments list#}
+{#                    const newCommentsList = tempDiv.querySelector('.modal-body').innerHTML;#}
+{#                    commentsContainer.innerHTML = newCommentsList;#}
+{##}
+{#                    // Re-attach event listeners after content update#}
+{#                    attachModalEventListeners(reviewId);#}
+{#                })#}
+{#                .catch(error => {#}
+{#                    console.error('Error loading modal content:', error);#}
+{#                });#}
+{#        }#}
+{#    });#}
+{#</script>#}
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        // Toggle Comments Functionality
-        document.querySelectorAll(".toggle-comments").forEach(button => {
+        // Handle opening the comments modal
+        document.querySelectorAll(".open-comments-modal").forEach(button => {
             button.addEventListener("click", function () {
                 const reviewId = button.dataset.reviewId;
-                const commentsContainer = document.getElementById(`comments-container-${reviewId}`);
-                commentsContainer.classList.toggle("d-none");
+                loadCommentsModal(reviewId);
             });
         });
 
-        // Add Comment Functionality
-        document.querySelectorAll(".add-comment-form").forEach(form => {
-            form.addEventListener("submit", function (e) {
-                e.preventDefault();
-                const reviewId = form.dataset.reviewId;
-                const formData = new FormData(form);
-                const csrfToken = document.querySelector('[name="csrfmiddlewaretoken"]').value;
-
-                fetch(`/books/add-comment/${reviewId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': csrfToken
-                    },
-                    body: formData
+        function loadCommentsModal(reviewId) {
+            fetch(`/books/review-comments/${reviewId}/`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
                 })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            location.reload();  // Reload page to show the new comment
-                        } else {
-                            console.error('Error:', data.message);
-                        }
-                    })
-                    .catch(error => console.error('Error:', error));
+                .then(data => {
+                    // Insert the modal HTML into the page
+                    document.body.insertAdjacentHTML('beforeend', data.html);
+                    // Show the modal
+                    const modalElement = document.getElementById('comments-modal');
+                    const modal = new bootstrap.Modal(modalElement);
+                    modal.show();
+
+                    // Initialize currentPage to 1 when modal is first opened
+                    modalElement.dataset.currentPage = '1';
+
+                    // Attach event listeners
+                    attachModalEventListeners(reviewId);
+
+                    // Remove the modal from DOM when hidden to prevent duplicates
+                    modalElement.addEventListener('hidden.bs.modal', function () {
+                        modalElement.remove();
+                    });
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                });
+        }
+
+        function attachModalEventListeners(reviewId) {
+            const modalElement = document.getElementById('comments-modal');
+
+            // Handle pagination links inside the modal
+            document.querySelectorAll('#comments-modal .pagination a').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    // Update currentPage data attribute on the modal
+                    modalElement.dataset.currentPage = page;
+                    loadModalContent(reviewId, page);
+                });
             });
-        });
 
-        // Load More Comments Functionality
-        document.querySelectorAll(".load-more-comments").forEach(button => {
-            button.addEventListener("click", function () {
-                const reviewId = button.dataset.reviewId;
-                const commentsContainer = document.getElementById(`comments-container-${reviewId}`);
-                let page = button.dataset.page ? parseInt(button.dataset.page) + 1 : 2;
+            // Handle adding a new comment inside the modal
+            const form = document.getElementById('modal-add-comment-form');
+            if (form) {
+                form.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const formData = new FormData(form);
+                    const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
 
-                fetch(`/books/load-more-comments/${reviewId}/?page=${page}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        data.comments.forEach(comment => {
-                            const commentHtml = `
-                                <div class="comment">
-                                    <strong>${comment.user}</strong>
-                                    <p>${comment.content}</p>
-                                    <small class="text-muted">${comment.created_at}</small>
-                                </div>
-                            `;
-                            commentsContainer.insertAdjacentHTML('beforeend', commentHtml);
+                    fetch(`/books/add-comment/${reviewId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Get currentPage from modal's data attribute
+                                const currentPage = modalElement.dataset.currentPage || '1';
+                                // Reload modal content to include the new comment
+                                loadModalContent(reviewId, currentPage);
+                            } else {
+                                alert('Error adding comment.');
+                            }
                         });
-                        if (!data.has_next) {
-                            button.remove();
-                        } else {
-                            button.dataset.page = page;
-                        }
+                });
+            }
+
+            // Handle delete comment inside the modal
+            document.querySelectorAll('#comments-modal .delete-comment-btn').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const commentId = button.dataset.commentId;
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                    fetch(`/books/delete-comment/${commentId}/`, {
+                        method: 'POST',  // Using POST as DELETE might be blocked by some servers
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
                     })
-                    .catch(error => console.error('Error:', error));
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // Reload modal content to reflect the deleted comment
+                                const currentPage = modalElement.dataset.currentPage || '1';
+                                loadModalContent(reviewId, currentPage);
+                            } else {
+                                alert('Error deleting comment.');
+                            }
+                        });
+                });
             });
-        });
+
+            // Handle edit comment inside the modal
+            document.querySelectorAll('#comments-modal .edit-comment-btn').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const commentId = button.dataset.commentId;
+                    const commentContent = document.querySelector(`#comment-content-${commentId}`);
+
+                    // Save the original content in a data attribute for later use
+                    commentContent.dataset.originalContent = commentContent.innerText;
+
+                    // Replace comment content with an editable textarea
+                    commentContent.innerHTML = `
+                        <textarea class="form-control edit-comment-textarea" name="content">${commentContent.innerText}</textarea>
+                        <button class="btn btn-primary btn-sm save-edit-comment-btn mt-2" data-comment-id="${commentId}">Save</button>
+                        <button class="btn btn-secondary btn-sm cancel-edit-comment-btn mt-2" data-comment-id="${commentId}">Cancel</button>
+                    `;
+
+                    // Attach event listeners for save and cancel buttons
+                    document.querySelector(`#comment-content-${commentId} .save-edit-comment-btn`).addEventListener('click', function () {
+                        const updatedContent = document.querySelector(`#comment-content-${commentId} .edit-comment-textarea`).value;
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                        // Create a FormData object and append the updated content
+                        const formData = new FormData();
+                        formData.append('content', updatedContent);
+                        formData.append('csrfmiddlewaretoken', csrfToken); // Include the CSRF token in the form data
+
+                        fetch(`/books/edit-comment/${commentId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                // Do not set 'Content-Type' header; the browser will set it automatically
+                            },
+                            body: formData,
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    return response.json().then(data => {
+                                        throw data;
+                                    });
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.success) {
+                                    // Update the comment content with the new value
+                                    commentContent.innerHTML = `<p>${data.content}</p>`;
+                                } else {
+                                    alert('Error updating comment.');
+                                }
+                            })
+                            .catch(errorData => {
+                                if (errorData.errors) {
+                                    // Handle form validation errors
+                                    let errorMessages = '';
+                                    for (const field in errorData.errors) {
+                                        errorData.errors[field].forEach(error => {
+                                            errorMessages += `${field}: ${error.message}\n`;
+                                        });
+                                    }
+                                    alert('Error editing comment:\n' + errorMessages);
+                                } else {
+                                    alert('An unexpected error occurred.');
+                                }
+                            });
+                    });
+
+                    document.querySelector(`#comment-content-${commentId} .cancel-edit-comment-btn`).addEventListener('click', function () {
+                        // Revert back to original content without saving changes
+                        commentContent.innerHTML = `<p>${commentContent.dataset.originalContent}</p>`;
+                    });
+                });
+            });
+        }
+
+        function loadModalContent(reviewId, page = 1) {
+            fetch(`/books/review-comments/${reviewId}/?page=${page}`, {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Instead of replacing entire modal content, update specific sections
+                    const commentsContainer = document.querySelector('#comments-modal .modal-body');
+
+                    // Create a temporary div to parse the HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = data.html;
+
+                    // Update comments list
+                    const newCommentsList = tempDiv.querySelector('.modal-body').innerHTML;
+                    commentsContainer.innerHTML = newCommentsList;
+
+                    // Re-attach event listeners after content update
+                    attachModalEventListeners(reviewId);
+                })
+                .catch(error => {
+                    console.error('Error loading modal content:', error);
+                });
+        }
     });
 </script>

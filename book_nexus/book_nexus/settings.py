@@ -33,6 +33,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,6 +53,37 @@ INSTALLED_APPS = [
     'book_nexus.common.apps.CommonConfig',
     'book_nexus.api.apps.ApiConfig'
 ]
+
+
+JAZZMIN_SETTINGS = {
+    "site_title": "Book Nexus Admin",
+
+    "site_header": "Book Nexus",
+
+    "site_icon": "images/bookshelf.png",
+
+    "show_ui_builder": True,
+
+    # "site_logo": "your_logo_path.png",  Add a static logo here if desired
+
+    "welcome_sign": "Welcome to Book Nexus Admin",
+
+    "icons": {
+        "books.Book": "fas fa-book",
+        "books.Author": "fas fa-user",
+        "books.Review": "fas fa-star",
+    },
+
+    "topmenu_links": [
+        {"name": "Home", "url": "/", "permissions": ["auth.view_user"]},
+    ],
+
+    "models": {
+        "book.Book": {"icon": "fas fa-book", "show_sidebar": True},
+        "book.Author": {"icon": "fas fa-user"},
+        "book.Review": {"icon": "fa-star"},
+    },
+}
 
 
 REST_FRAMEWORK = {

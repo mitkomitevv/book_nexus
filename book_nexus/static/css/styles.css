@@ -4,6 +4,7 @@
 }
 
 .body-container {
+    padding-top: 50px;
     height: 100%;
     margin: 0;
     display: flex;
@@ -89,27 +90,38 @@
     background-color: #f5f5f5;
 }
 
-
 @media (min-width: 992px) {
     .book-cover-container {
         position: fixed;
-        top: 75px;
-        left: 75px;
-        width: 270px;
+        top: auto;
+        left: 15px;
+        width: auto;
     }
 
     .book-details-container {
-        margin-left: 270px;
+        margin-left: auto;
     }
 }
 
-@media (max-width: 991px) {
+@media (min-width: 1200px) {
     .book-cover-container {
-        position: relative;
-        width: 100%;
+        position: fixed;
+        top: auto;
+        left: auto;
+        width: auto;
     }
 
     .book-details-container {
-        margin-left: 0;
+        margin-left: auto;
     }
+}
+
+.add-see-edit-comment-textarea{
+    width: 100%;
+    max-width: 500px;
+}
+
+.wide-search {
+    width: 400px;
+    left: 100px;
 }

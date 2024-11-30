@@ -1,8 +1,6 @@
 from django import forms
-from django.db.models import Max
-
 from book_nexus.books.models import Book, Author, Series, SeriesBook, Review
-from django_select2.forms import Select2MultipleWidget, Select2Widget, Select2TagWidget
+from django_select2.forms import Select2MultipleWidget, Select2Widget
 
 
 
@@ -40,23 +38,10 @@ class BookBaseForm(forms.ModelForm):
     )
 
     series_number = forms.IntegerField(
-        required=False,
+        required=True,
         widget=forms.NumberInput(attrs={'class': 'form-control'}),
         label="Book Number in Series",
     )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        if self.instance and self.instance.pk:
-            series_books = self.instance.series_books.all()
-            if series_books.exists():
-                series_book = series_books.first()
-                self.fields['series'].initial = series_book.series
-                self.fields['series_number'].initial = series_book.number
-                print(f"Form initialized with series '{series_book.series}' and number {series_book.number}")
-            else:
-                print("No series associated with this book.")
 
     class Meta:
         model = Book
@@ -90,7 +75,7 @@ class BookBaseForm(forms.ModelForm):
 
         series = self.cleaned_data.get('series')
         new_series_name = self.cleaned_data.get('new_series_name')
-        series_number = self.cleaned_data.get('series_number') or 1
+        series_number = self.cleaned_data.get('series_number')
 
         if new_series_name:
             series, created = Series.objects.get_or_create(name=new_series_name)
@@ -116,7 +101,18 @@ class BookCreateForm(BookBaseForm):
 
 
 class BookUpdateForm(BookBaseForm):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if self.instance and self.instance.pk:
+            series_books = self.instance.series_books.all()
+            if series_books.exists():
+                series_book = series_books.first()
+                self.fields['series'].initial = series_book.series
+                self.fields['series_number'].initial = series_book.number
+                print(f"Form initialized with series '{series_book.series}' and number {series_book.number}")
+            else:
+                print("No series associated with this book.")
 
 
 class ReviewForm(forms.ModelForm):
