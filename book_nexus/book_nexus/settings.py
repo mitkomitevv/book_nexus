@@ -1,9 +1,20 @@
-from decouple import config
+import os
+from decouple import config, Config, RepositoryEnv, AutoConfig
 from pathlib import Path
 
 from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+auto_config = AutoConfig(search_path=BASE_DIR)
+ENVIRONMENT = auto_config('ENVIRONMENT', default='prod')
+
+env_file_name = f'.env.{ENVIRONMENT}' if ENVIRONMENT != 'prod' else '.env'
+env_file_path = os.path.join(BASE_DIR, env_file_name)
+
+print(f"Loading environment file: {env_file_name}")
+
+config = Config(repository=RepositoryEnv(env_file_path))
 
 SECRET_KEY = config('SECRET_KEY')
 
