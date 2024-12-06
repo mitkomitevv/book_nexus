@@ -1,4 +1,7 @@
 from django import forms
+from django.db.models import Max
+from django.db import transaction
+
 from book_nexus.books.models import Book, Author, Series, SeriesBook, Review
 from django_select2.forms import Select2MultipleWidget, Select2Widget
 
@@ -38,7 +41,7 @@ class BookBaseForm(forms.ModelForm):
     )
 
     series_number = forms.IntegerField(
-        required=True,
+        required=False,
         widget=forms.NumberInput(attrs={'class': 'form-control'}),
         label="Book Number in Series",
     )
@@ -55,45 +58,58 @@ class BookBaseForm(forms.ModelForm):
         }
 
     def save(self, commit=True):
-        instance = super().save(commit=False)
-        if commit:
-            instance.save()
 
-        existing_authors = self.cleaned_data.get('authors', [])
-        new_authors_set = set(existing_authors)
-        instance.authors.set(new_authors_set)
+        with transaction.atomic():
+            instance = super().save(commit=False)
+            if commit:
+                instance.save()
 
-        new_authors = self.cleaned_data.get('new_authors', '')
-        if new_authors:
-            author_names = [name.strip() for name in new_authors.split(',') if name.strip()]
-            for name in author_names:
-                author, created = Author.objects.get_or_create(name=name)
-                instance.authors.add(author)
-                new_authors_set.add(author)
+            existing_authors = self.cleaned_data.get('authors', [])
+            new_authors_set = set(existing_authors)
+            instance.authors.set(new_authors_set)
 
-        current_authors = set(instance.authors.all())
+            new_authors = self.cleaned_data.get('new_authors', '')
+            if new_authors:
+                author_names = [name.strip() for name in new_authors.split(',') if name.strip()]
+                for name in author_names:
+                    author, created = Author.objects.get_or_create(name=name)
+                    instance.authors.add(author)
+                    new_authors_set.add(author)
 
-        series = self.cleaned_data.get('series')
-        new_series_name = self.cleaned_data.get('new_series_name')
-        series_number = self.cleaned_data.get('series_number')
+            current_authors = set(instance.authors.all())
 
-        if new_series_name:
-            series, created = Series.objects.get_or_create(name=new_series_name)
+            series = self.cleaned_data.get('series')
+            new_series_name = self.cleaned_data.get('new_series_name')
+            series_number = self.cleaned_data.get('series_number')
 
-        if series:
-            SeriesBook.objects.filter(series=series, book=instance).delete()
-            SeriesBook.objects.create(series=series, book=instance, number=series_number)
+            if new_series_name:
+                series, created = Series.objects.get_or_create(name=new_series_name)
+            elif series:
+                pass
+            else:
+                SeriesBook.objects.filter(book=instance).delete()
+                series = None
 
-            for author in current_authors:
-                series.authors.add(author)
+            if series is not None:
+                if not series_number:
+                    last_number = SeriesBook.objects.filter(series=series).aggregate(
+                        max_number=Max('number')
+                    )['max_number'] or 0
+                    series_number = last_number + 1
 
-            previous_authors = set(instance.authors.all())
-            authors_to_remove = previous_authors - current_authors
-            for author in authors_to_remove:
-                if not author.books.filter(series_books__series=series).exists():
-                    series.authors.remove(author)
+                SeriesBook.objects.filter(series=series, book=instance).delete()
+                SeriesBook.objects.create(series=series, book=instance, number=series_number)
 
-        return instance
+                for author in current_authors:
+                    series.authors.add(author)
+
+                previous_authors = set(instance.authors.all())
+                authors_to_remove = previous_authors - current_authors
+                for author in authors_to_remove:
+                    if not author.books.filter(series_books__series=series).exists():
+                        series.authors.remove(author)
+
+            return instance
 
 
 class BookCreateForm(BookBaseForm):
@@ -103,7 +119,7 @@ class BookCreateForm(BookBaseForm):
 class BookUpdateForm(BookBaseForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        # todo: make the form auto populate image, upload it only if it doesnt already exists and show preview
         if self.instance and self.instance.pk:
             series_books = self.instance.series_books.all()
             if series_books.exists():

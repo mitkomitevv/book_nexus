@@ -1,72 +1,97 @@
 {% extends 'common/base.html' %}
+{% load user_extras %}
+{% load custom_tags %}
 {% load static %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-3 text-center">
-            {% if object.profile.profile_picture %}
-                <img src="{{ object.profile.profile_picture.url }}" alt="profile img" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-            {% else %}
-                <img src="{% static 'images/stock_profile.png' %}" alt="profile img" class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
-            {% endif %}
-            <h2 class="font-weight-bold">{{ object.full_name }}</h2>
-            <div class="profile-info">
-                {% if request.user.pk == object.pk %}
-                    <a href="{% url 'profile_edit' object.pk %}">Edit Profile</a>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-3 text-center">
+                {% if object.profile.profile_picture %}
+                    <img src="{{ object.profile.profile_picture.url }}" alt="profile img"
+                         class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                {% else %}
+                    <img src="{% static 'images/stock_profile.png' %}" alt="profile img"
+                         class="img-fluid rounded-circle mb-3" style="width: 150px; height: 150px; object-fit: cover;">
                 {% endif %}
-                <p><strong>Details:</strong> Age {{ age }}, {{ object.profile.get_gender_display }}, {{ object.profile.country }}</p>
-                <p><strong>Birthday:</strong> {{ object.profile.date_of_birth }}</p>
-                <p><strong>Activity:</strong> Joined in {{ object.date_joined|date:"F Y" }}, last active {{ object.last_login|date:"F Y" }}</p>
-                <p><strong>Interests:</strong> {{ object.profile.interests }}</p>
-                <p><strong>Favorite Books:</strong> {{ object.profile.favorite_books }}</p>
-            </div>
-        </div>
+                <h2 class="font-weight-bold">{{ object.full_name }}</h2>
+                <div class="profile-info">
+                    {% if request.user.pk == object.pk or request.user.is_superuser or request.user|has_group:'Moderators' %}
+                        <a href="{% url 'profile_edit' object.pk %}"
+                           class="btn btn-primary btn-sm"
+                           role="button">Edit Profile</a>
+                    {% endif %}
+                
+                    {% if user.is_authenticated and user.pk != object.pk %}
+                        {% if user.following|does_follow:object %}
+                            <form action="{% url 'unfollow_user' object.pk %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-warning btn-sm">Unfollow</button>
+                            </form>
+                        {% else %}
+                            <form action="{% url 'follow_user' object.pk %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary btn-sm">Follow</button>
+                            </form>
+                        {% endif %}
+                    {% endif %}
 
-        <div class="col-md-9">
-            <div class="mb-4">
-                <p class="mb-1">{{ object.profile.ratings_count }} ratings ({{ object.profile.average_rating }} avg)</p>
-                <p class="mb-1">{{ object.profile.reviews_count }} reviews</p>
+                    <p><strong>Details:</strong>
+                        Age {{ age }}, {{ object.profile.get_gender_display }}, {{ object.profile.country }}</p>
+                    <p><strong>Birthday:</strong> {{ object.profile.date_of_birth }}</p>
+                    <p><strong>Activity:</strong> Joined in {{ object.date_joined|date:"F Y" }}, last
+                        active {{ object.last_login|date:"F Y" }}</p>
+                    <p><strong>Interests:</strong> {{ object.profile.interests }}</p>
+                </div>
             </div>
-        
-            <div class="favorites-shelf mb-4">
-                <h4 class="font-weight-bold">{{ object.full_name|upper }}'s FAVORITES SHELF</h4>
-                <div class="favorites-books d-flex overflow-auto">
-                    {% for book in object.favorites_books %}
-                        <div class="book-cover mx-1">
-                            <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-thumbnail" style="width: 100px; height: 150px; object-fit: cover;">
+
+            <div class="col-md-9">
+                <div class="mb-4">
+                    <p class="mb-1">{{ object.profile.ratings_count }} ratings ({{ object.profile.average_rating }}
+                        avg)</p>
+                    <p class="mb-1">{{ object.profile.reviews_count }} reviews</p>
+                </div>
+
+                <div class="favorites-shelf mb-4">
+                    <h4 class="font-weight-bold">{{ object.full_name|upper }}'s FAVORITES SHELF</h4>
+                    <div class="favorites-books d-flex overflow-auto">
+                        {% for book in object.favorites_books %}
+                            <div class="book-cover mx-1">
+                                <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-thumbnail"
+                                     style="width: 100px; height: 150px; object-fit: cover;">
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Bookshelves Summary -->
+                <div class="bookshelves-summary mb-4">
+                    <h5 class="font-weight-bold">{{ object.full_name|upper }}'s BOOKSHELVES</h5>
+                    <ul class="list-inline">
+                        <li class="list-inline-item">read ({{ read_count }})</li>
+                        <li class="list-inline-item">to-read ({{ want_to_read_count }})</li>
+                        <li class="list-inline-item">currently-reading ({{ currently_reading_count }})</li>
+                        <li class="list-inline-item">favorites ({{ favorites_count }})</li>
+                    </ul>
+                </div>
+
+                <!-- Currently Reading Section -->
+                <div class="currently-reading mb-4">
+                    <h5 class="font-weight-bold">{{ object.full_name|upper }} IS CURRENTLY READING</h5>
+                    {% for book in object.currently_reading_books %}
+                        <div class="d-flex align-items-center mb-2">
+                            <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-thumbnail mr-3"
+                                 style="width: 80px; height: 120px; object-fit: cover;">
+                            <div>
+                                <h6>{{ book.title }} by {{ book.author }}</h6>
+                                <p class="text-muted">{{ book.date_added|date:"M d, Y" }} - Currently Reading</p>
+                            </div>
                         </div>
                     {% endfor %}
                 </div>
             </div>
-
-            <!-- Bookshelves Summary -->
-            <div class="bookshelves-summary mb-4">
-                <h5 class="font-weight-bold">{{ object.full_name|upper }}'s BOOKSHELVES</h5>
-                <ul class="list-inline">
-                    <li class="list-inline-item">read ({{ read_count }})</li>
-                    <li class="list-inline-item">to-read ({{ want_to_read_count }})</li>
-                    <li class="list-inline-item">currently-reading ({{ currently_reading_count }})</li>
-                    <li class="list-inline-item">favorites ({{ favorites_count }})</li>
-                </ul>
-            </div>
-
-            <!-- Currently Reading Section -->
-            <div class="currently-reading mb-4">
-                <h5 class="font-weight-bold">{{ object.full_name|upper }} IS CURRENTLY READING</h5>
-                {% for book in object.currently_reading_books %}
-                    <div class="d-flex align-items-center mb-2">
-                        <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-thumbnail mr-3" style="width: 80px; height: 120px; object-fit: cover;">
-                        <div>
-                            <h6>{{ book.title }} by {{ book.author }}</h6>
-                            <p class="text-muted">{{ book.date_added|date:"M d, Y" }} - Currently Reading</p>
-                        </div>
-                    </div>
-                {% endfor %}
-            </div>
         </div>
     </div>
-</div>
 {% endblock %}
 
 {#TODO: Fix this whole page#}

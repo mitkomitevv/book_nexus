@@ -1,5 +1,5 @@
 <div class="dropdown reading-list-dropdown" data-book-id="{{ book.pk }}">
-    <button class="btn btn-outline-primary btn-sm dropdown-toggle"
+    <button class="reading_list_button btn btn-success btn-sm dropdown-toggle"
             type="button" id="readingListDropdown-{{ book.pk }}" data-bs-toggle="dropdown"
             aria-expanded="false">
         {% if book.pk in want_to_read_books %}

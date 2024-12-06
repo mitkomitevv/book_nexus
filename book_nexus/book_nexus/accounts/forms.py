@@ -66,6 +66,8 @@ class ProfileEditForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # todo: make the form auto populate image, upload it only if it doesnt already exists and show preview
+
         if self.instance and self.instance.date_of_birth:
             formatted_date = self.instance.date_of_birth.strftime('%Y-%m-%d')
             self.initial['date_of_birth'] = formatted_date

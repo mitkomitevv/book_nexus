@@ -13,3 +13,6 @@ def get_placeholder(field_name):
     }
     return placeholders.get(field_name, 'Enter value')
 
+@register.filter
+def does_follow(queryset, obj):
+    return queryset.filter(followed_user=obj).exists()

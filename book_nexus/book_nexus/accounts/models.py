@@ -38,7 +38,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         return self.email
 
 
-
 UserModel = get_user_model()
 
 
@@ -75,3 +74,23 @@ class Profile(models.Model):
 
     def __str__(self):
         return self.user.full_name
+
+
+class Follow(models.Model):
+    follower = models.ForeignKey(
+        to=UserModel,
+        on_delete=models.CASCADE,
+        related_name='following'
+    )
+    followed_user = models.ForeignKey(
+        to=UserModel,
+        on_delete=models.CASCADE,
+        related_name='followers'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'followed_user')
+
+    def __str__(self):
+        return f"{self.follower.full_name} follows {self.followed_user.full_name}"

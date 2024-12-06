@@ -1,0 +1,11 @@
+{% load user_extras %}
+
+{% for i in "12345" %}
+    {% if average_rating >= forloop.counter %}
+        <i class="fas fa-star stars-color"></i>
+    {% elif average_rating >= forloop.counter0|add_float:0.5 %}
+        <i class="fas fa-star-half-alt stars-color"></i>
+    {% else %}
+        <i class="far fa-star stars-color"></i>
+    {% endif %}
+{% endfor %}

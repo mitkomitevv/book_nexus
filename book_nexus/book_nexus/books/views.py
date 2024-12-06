@@ -12,7 +12,7 @@ from django.views.generic import CreateView, ListView, DetailView, UpdateView, D
 
 from book_nexus.books.forms import BookCreateForm, AuthorCreateForm, BookUpdateForm, ReviewForm
 from book_nexus.books.mixins import BookQuerysetMixin
-from book_nexus.books.models import Book, Rating, Author, Review, Comment
+from book_nexus.books.models import Book, Rating, Author, Review, Comment, Series
 from book_nexus.reading_list.mixins import UserReadingListMixin
 
 
@@ -45,14 +45,10 @@ def book_delete_view(request, pk):
 
 class BookListView(BookQuerysetMixin ,UserReadingListMixin, ListView):
     model = Book
-    template_name = 'books/book_list.html'
+    template_name = 'books/book-list.html'
     context_object_name = 'books'
     paginate_by = 10
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['query'] = ''
-        return context
 
 class BookDetailsView(UserReadingListMixin, DetailView):
     model = Book
@@ -69,10 +65,10 @@ class BookDetailsView(UserReadingListMixin, DetailView):
             average_rating=Avg('rating'),
             rating_count=Count('rating')
         )
+
         context['average_rating'] = aggregate_data['average_rating']
         context['rating_count'] = aggregate_data['rating_count']
-        # TODO: Remove this if i dont have the time to fix the reading list button
-        context['is_details_view'] = True
+        context['review_count'] = book.reviews.count()
 
         # Prefetch related objects to reduce queries
         reviews_queryset = Review.objects.filter(book=book).select_related('user').prefetch_related(
@@ -80,7 +76,6 @@ class BookDetailsView(UserReadingListMixin, DetailView):
             Prefetch('comments', queryset=Comment.objects.order_by('-created_at'))
         ).order_by('-created_at')
 
-        # Paginate reviews
         page = self.request.GET.get('page', 1)
         paginator = Paginator(reviews_queryset, self.reviews_per_page)
         try:
@@ -147,7 +142,8 @@ class EditReviewView(LoginRequiredMixin, UserPassesTestMixin, View):
         review = get_object_or_404(Review, pk=self.kwargs['review_pk'])
         return (
                 self.request.user == review.user or
-                self.request.user.groups.filter(name='Moderators').exists
+                self.request.user.is_superuser or
+                self.request.user.groups.filter(name='Moderators').exists()
         )
 
     def post(self, request, review_pk):
@@ -170,7 +166,8 @@ class DeleteReviewView(LoginRequiredMixin, UserPassesTestMixin, View):
         review = get_object_or_404(Review, pk=self.kwargs['review_pk'])
         return (
                 self.request.user == review.user or
-                self.request.user.groups.filter(name='Moderators').exists
+                self.request.user.is_superuser or
+                self.request.user.groups.filter(name='Moderators').exists()
         )
 
     def post(self, request, review_pk):
@@ -221,7 +218,8 @@ class EditCommentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         comment = self.get_object()
         return (
                 self.request.user == comment.user or
-                self.request.user.groups.filter(name='Moderators').exists
+                self.request.user.is_superuser or
+                self.request.user.groups.filter(name='Moderators').exists()
         )
 
     def form_valid(self, form):
@@ -246,8 +244,9 @@ class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         comment = self.get_object()
         return (
-            self.request.user == comment.user or
-            self.request.user.groups.filter(name='Moderators').exists()
+                self.request.user == comment.user or
+                self.request.user.is_superuser or
+                self.request.user.groups.filter(name='Moderators').exists()
         )
 
     def post(self, request, *args, **kwargs):
@@ -323,6 +322,7 @@ class RateBookView(LoginRequiredMixin, View):
             return JsonResponse({'success': False, 'message': str(e)})
 
 
+# TODO: PERMISSIONS!!!
 class AuthorCreateView(LoginRequiredMixin, CreateView):
     model = Author
     form_class = AuthorCreateForm
@@ -330,15 +330,39 @@ class AuthorCreateView(LoginRequiredMixin, CreateView):
     success_url = reverse_lazy('home')
 
 
-class AuthorDetailView(ListView):
+class AuthorDetailsView(DetailView):
     model = Author
-    template_name = 'authors/show-author.html'
+    template_name = 'authors/author-details.html'
     context_object_name = 'author'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context['series_list'] = self.object.series.prefetch_related('series_books__book')
+        return context
+
+class ShowAuthorBooksView(BookQuerysetMixin, UserReadingListMixin, ListView):
+    model = Book
+    template_name = 'books/book-list.html'
+    context_object_name = 'books'
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        author_id = self.kwargs.get('pk')
+        return queryset.filter(authors__id=author_id).prefetch_related('authors')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        author_id = self.kwargs.get('pk')
+
+        author = get_object_or_404(Author, pk=author_id)
+        context['author'] = author
+        return context
 
 
 class BookSearchView(BookQuerysetMixin, UserReadingListMixin, ListView):
     model = Book
-    template_name = 'books/book_list.html'
+    template_name = 'books/book-list.html'
     context_object_name = 'books'
     paginate_by = 10
 
@@ -360,4 +384,32 @@ class BookSearchView(BookQuerysetMixin, UserReadingListMixin, ListView):
         context = super().get_context_data(**kwargs)
         if hasattr(self, 'extra_context'):
             context.update(self.extra_context)
+        return context
+
+
+class SeriesDetailView(UserReadingListMixin, DetailView):
+    model = Series
+    template_name = 'books/series-details.html'
+    context_object_name = 'series'
+    paginate_by = 10
+
+    def get_books_queryset(self):
+        mixin = BookQuerysetMixin()
+        mixin.request = self.request
+        return (
+            mixin.get_queryset()
+            .filter(series_books__series=self.object)
+            .order_by('series_books__number')
+        )
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        books = self.get_books_queryset()
+
+        paginator = Paginator(books, self.paginate_by)
+        page_number = self.request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        context['page_obj'] = page_obj
+        context['books'] = page_obj.object_list
         return context

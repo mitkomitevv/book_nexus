@@ -4,7 +4,7 @@
     <div class="row justify-content-center">
         <div class="col-lg-6 col-md- col-sm-12 mx-auto">
             <h1 class="text-center mb-4">Edit Profile</h1>
-            <form method="post" enctype="multipart/form-data" class="mb-5"> 
+            <form method="post" enctype="multipart/form-data" class="mb-5">
                 {% csrf_token %}
                 <div class="mx-auto">
                     <div class="mb-3">
@@ -18,7 +18,7 @@
                         >
                         {{ form.full_name.errors }}
                     </div>
-                
+
                     {% for field in form %}
                         {% if field.name != 'full_name' %}
                             <div class="mb-3">
@@ -44,7 +44,7 @@
                             </div>
                         {% endif %}
                     {% endfor %}
-                    <div class="d-grid gap-2 mt-4 mb-4"> 
+                    <div class="d-grid gap-2 mt-4 mb-4">
                         <button class="btn btn-dark" type="submit">Edit Profile</button>
                     </div>
                 </div>

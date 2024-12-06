@@ -1,32 +1,28 @@
 {% extends 'common/base.html' %}
-{% load user_extras %}
 {% load static %}
 
 {% block content %}
-    <a href="{% url 'create-book' %}">Add Book</a>
-    <a href="{% url 'author-create' %}">Add Author</a>
-
-    <div class="container">
+    <div class="container mt-4">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-7">
-                {% if query %}
-                    <h2 class="mb-4">Your search results for "{{ query }}"</h2>
-                {% else %}
-                    <h2 class="mb-4">All Books</h2>
-                {% endif %}
-
+            <div class="col-9">
+                <h2 class="mb-4">{{ series.name }} by
+                    {% for author in series.authors.all %}
+                        <small class="text-muted">
+                            {{ author.name }}{% if not forloop.last %}, {% endif %}</small>
+                    {% endfor %}
+                </h2>
                 {% for book in books %}
-                    <div class="mb-4">
-                        <div class="row justify-content-center">
-                            <div class="col-md-2 col-lg-2 col-sm-3 col-xs-2">
+                    <div class="card mb-3">
+                        <div class="row g-0">
+                            <div class="col-md-2">
                                 <!-- Book Cover Image -->
                                 <a href="{% url 'book-details' book.pk %}">
                                     {% if book.cover %}
                                         <img src="{{ book.cover.url }}" alt="{{ book.title }}"
-                                             class="img-fluid rounded cover-image">
+                                             class="img-fluid rounded-start cover-image">
                                     {% else %}
                                         <img src="{% static 'images/default_cover.jpg' %}" alt="{{ book.title }}"
-                                             class="img-fluid rounded cover-image">
+                                             class="img-fluid rounded-start cover-image">
                                     {% endif %}
                                 </a>
                             </div>
@@ -35,11 +31,12 @@
                                     <!-- Book Title and Series -->
                                     <div class="d-flex align-items-center">
                                         <a href="{% url 'book-details' book.pk %}" class="text-decoration-none">
-                                            <h5 class="text-muted fw-bold">{{ book.title }}</h5>
+                                            <h4 class="card-title text-muted fw-bold">{{ book.title }}</h4>
                                         </a>
                                         {% if book.series_books.exists %}
-                                            <a href="" class="text-decoration-none ms-2">
-                                                <h5 class="text-muted">
+                                            <a href="{% url 'series-detail' book.series_books.first.series.pk %}"
+                                               class="text-decoration-none ms-3">
+                                                <h5 class="text-muted mb-1">
                                                     {% with book.series_books.first as series_book %}
                                                         ({{ series_book.series.name }}, #{{ series_book.number }})
                                                     {% endwith %}
@@ -49,35 +46,34 @@
                                     </div>
 
                                     <!-- Author(s) -->
-                                    <p class="card-text">
+                                    <p class="card-text mb-1">
                                         <small class="text-muted">by</small>
                                         {% for author in book.authors.all %}
-                                            <small class="text-muted">
-                                                {{ author.name }}{% if not forloop.last %}, {% endif %}</small>
+                                            <a href="{% url 'author-details' author.pk %}" class="text-decoration-none">
+                                                <small class="text-muted">
+                                                    {{ author.name }}{% if not forloop.last %}, {% endif %}</small>
+                                            </a>
                                         {% endfor %}
                                     </p>
 
                                     <!-- Rating Section -->
-                                    <p class="card-text">
-                                    <span class="text-warning">
-                                        {% for i in "12345" %}
-                                            {% if book.average_rating >= forloop.counter %}
-                                                <i class="fas fa-star"></i>
-                                            {% elif book.average_rating >= forloop.counter0|add:0.5 %}
-                                                <i class="fas fa-star-half-alt"></i>
-                                            {% else %}
-                                                <i class="far fa-star"></i>
-                                            {% endif %}
-                                        {% endfor %}
-                                        <small class="text-muted">{{ book.average_rating|floatformat:1 }} — </small>
-                                    </span>
+                                    <p class="card-text mb-1">
+                                            <span>
+
+                                                {% include 'books/book-star-rating.html' with average_rating=book.average_rating %}
+
+                                                <small class="text-muted">{{ book.average_rating|floatformat:1 }} — </small>
+                                            </span>
                                         <small class="text-muted">
                                             {{ book.rating_count }} rating{{ book.rating_count|pluralize }} —
                                             published {{ book.publication_date }}
                                         </small>
                                     </p>
 
-                                    <!-- User Rating and Actions -->
+                                    <!-- Book Summary -->
+                                    <p class="card-text">
+                                        {{ book.summary|truncatewords:40 }}
+                                    </p>
                                     <div class="d-flex align-items-center mb-0">
                                         {% include 'books/read-status-dropdown.html' %}
                                         {% if book.user_rating %}
@@ -94,52 +90,102 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- Edit and Delete Buttons -->
-                            {% if user.is_authenticated %}
-                                {% if comment.user == user or user.is_superuser or user|has_group:'Librarians' %}
-                                    <div class="d-flex justify-content-center gap-2 mt-0">
-                                        <a href="{% url 'book-edit' book.pk %}"
-                                           class="btn btn-outline-primary col-4 btn-sm"
-                                           role="button">Edit Book</a>
-                                        <button type="button"
-                                                class="btn btn-outline-danger col-4 btn-sm"
-                                                data-bs-toggle="modal"
-                                                data-bs-target="#deleteModal{{ book.pk }}">Delete Book
-                                        </button>
-                                    </div>
-                                {% endif %}
-                            {% endif %}
-
-                            <!-- Delete Confirmation Modal -->
-                            <div class="modal fade" id="deleteModal{{ book.pk }}" tabindex="-1" aria-hidden="true">
-                                <div class="modal-dialog">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title">Confirm Deletion</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                    aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            Are you sure you want to delete "{{ book.title }}"?
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                                Cancel
-                                            </button>
-                                            <a href="{% url 'book-delete' book.pk %}" class="btn btn-danger">Delete</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
-                    <hr style="border-top: 1px solid black;">
+                    <hr class="my-3">
                 {% endfor %}
+            
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Books pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+
+                            <!-- First Page Link -->
+                            {% if page_obj.number > 1 %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1" aria-label="First">
+                                        &laquo;
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&laquo;</span>
+                                </li>
+                            {% endif %}
+
+                            <!-- Previous Page Link -->
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}"
+                                       aria-label="Previous">
+                                        &lsaquo;
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&lsaquo;</span>
+                                </li>
+                            {% endif %}
+
+                            <!-- Page Number Links -->
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                    {% if num == 1 and page_obj.number > 4 %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% elif num == page_obj.paginator.num_pages and page_obj.number < page_obj.paginator.num_pages|add:'-3' %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endfor %}
+
+                            <!-- Next Page Link -->
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                                        &rsaquo;
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&rsaquo;</span>
+                                </li>
+                            {% endif %}
+
+                            <!-- Last Page Link -->
+                            {% if page_obj.number < page_obj.paginator.num_pages %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}"
+                                       aria-label="Last">
+                                        &raquo;
+                                    </a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link" aria-hidden="true">&raquo;</span>
+                                </li>
+                            {% endif %}
+
+                        </ul>
+                    </nav>
+                {% endif %}
+            
             </div>
         </div>
     </div>
-
 
     <script>
         // Initialize reading list handlers only once when document is ready
@@ -259,4 +305,5 @@
             });
         });
     </script>
+
 {% endblock %}

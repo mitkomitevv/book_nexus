@@ -1,0 +1,91 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <div class="container mt-5">
+        <div class="row">
+            <!-- Author Photo and Statistics -->
+            <div class="col-md-4 text-center">
+                <img src="
+                        
+                        {% if author.picture %}{{ author.picture.url }}{% else %}{% static 'images/stock_profile.png' %}{% endif %}"
+                     alt="{{ author.name }}" class="img-fluid rounded">
+            </div>
+
+            <!-- Author Bio and Details -->
+            <div class="col-md-8">
+                <h2 class="mb-3">{{ author.name }}</h2>
+                <div class="mt-4">
+                    {% if author.bio %}
+                        <p>{{ author.bio }}</p>
+                    {% else %}
+                        <h5>No info about {{ author.name }} yet</h5>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="row mt-5 offset-1">
+            <h4>{{ author.name }}'s books</h4>
+            <div class="col-11 d-flex align-items-center p-2 border-top">
+                {% for book in author.books.all|slice:":10" %}
+                    <div class="me-2 img-responsive">
+                        <a href="{% url 'book-details' book.pk %}">
+                            <img src="{{ book.cover.url }}" alt="{{ book.title }}" class="img-fluid rounded"
+                                 style="width: 90px; height: 135px; object-fit: cover;">
+                        </a>
+                    </div>
+                {% endfor %}
+            </div>
+                <small class="d-flex align-items-center ms-2">
+                    <a href="{% url 'author-show-books' author.pk %}"
+                       class="text-decoration-none">See all {{ author.name }}'s books</a>
+                </small>
+        </div>
+        <div class="row mt-4 offset-2">
+            <div class="col-9 justify-content-center">
+                <h4>Series by {{ author.name }}</h4>
+                {% for series in series_list %}
+                    {% if series.series_books.count > 0 %}
+                        <div class="card mb-4 p-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <a href="{% url 'series-detail' series.pk %}" class="text-decoration-none ms-2">
+                                        <h5 class="card-title mb-1 text-muted fw-bold">{{ series.name }}</h5>
+                                    </a>
+                                    <p class="mb-1">
+                                        <small class="">by
+                                            {% for author in series.authors.all %}
+                                                <a href="{% url 'author-details' author.pk %}"
+                                                   class="text-decoration-none">
+                                                    {{ author.name }}{% if not forloop.last %}, {% endif %}
+                                                </a>
+                                            {% endfor %}
+                                        </small>
+                                    </p>
+                                    <p>
+                                        <small class="text-muted">{{ series.series_books.count }} books in the
+                                            series</small>
+                                    </p>
+                                </div>
+                                <div class="d-flex">
+                                    <!-- Display up to 5-6 book covers from the series -->
+                                    {% for series_book in series.series_books.all|slice:":5" %}
+                                        <a href="{% url 'series-detail' series.pk %}">
+                                            <img src="{{ series_book.book.cover.url }}"
+                                                 alt="{{ series_book.book.title }}"
+                                                 class="img-thumbnail me-1"
+                                                 style="width: 75px; height: 110px; object-fit: cover;">
+                                        </a>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p>No series yet for {{ author.name }}</p>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,13 +1,14 @@
 from datetime import date
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DetailView, UpdateView
 from book_nexus.accounts.forms import CustomUserCreationForm, ProfileEditForm
-from book_nexus.accounts.models import Profile
+from book_nexus.accounts.models import Profile, Follow
 from book_nexus.reading_list.models import WantToRead, CurrentlyReading, Read, Favorites
 
 UserModel = get_user_model()
@@ -59,7 +60,11 @@ class UserEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         profile = get_object_or_404(Profile, pk=self.kwargs['pk'])
-        return self.request.user == profile.user
+        return (
+                self.request.user == profile.user or
+                self.request.user.is_superuser or
+                self.request.user.groups.filter(name='Moderators').exists()
+        )
 
     def get_success_url(self):
         return reverse_lazy(
@@ -68,3 +73,17 @@ class UserEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
                 'pk': self.object.pk,
             }
         )
+
+@login_required
+def follow_user(request, user_pk):
+    followed_user = get_object_or_404(UserModel, pk=user_pk)
+    if followed_user != request.user:
+        Follow.objects.get_or_create(follower=request.user, followed_user=followed_user)
+    return redirect('profile_details', pk=user_pk)
+
+
+@login_required
+def unfollow_user(request, user_pk):
+    followed_user = get_object_or_404(UserModel, pk=user_pk)
+    Follow.objects.filter(follower=request.user, followed_user=followed_user).delete()
+    return redirect('profile_details', pk=user_pk)

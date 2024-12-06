@@ -6,22 +6,11 @@ from django.urls import reverse_lazy
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-auto_config = AutoConfig(search_path=BASE_DIR)
-ENVIRONMENT = auto_config('ENVIRONMENT', default='prod')
-
-env_file_name = f'.env.{ENVIRONMENT}' if ENVIRONMENT != 'prod' else '.env'
-env_file_path = os.path.join(BASE_DIR, env_file_name)
-
-print(f"Loading environment file: {env_file_name}")
-
-config = Config(repository=RepositoryEnv(env_file_path))
-
 SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=lambda v: v.split(',') if v else [])
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -101,7 +90,6 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

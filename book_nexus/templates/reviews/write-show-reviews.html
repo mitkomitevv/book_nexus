@@ -14,7 +14,7 @@
                     <small class="text-muted">{{ user_review.created_at|date:"F d, Y H:i" }}</small>
                 {% endif %}
                 <div>
-                    <button id="edit-review-btn" class="btn btn-outline-success">Edit Review</button>
+                    <button id="edit-review-btn" class="btn btn-primary">Edit Review</button>
 
                     <form id="edit-review-form" action="{% url 'edit-review' user_review.pk %}" method="post"
                           class="d-none">
@@ -23,7 +23,7 @@
                         <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
                         <button type="button" id="cancel-edit-btn" class="btn btn-secondary mt-2">Cancel</button>
                     </form>
-                    <button id="delete-review-btn" class="btn btn-outline-danger" data-review-id="{{ user_review.pk }}">
+                    <button id="delete-review-btn" class="btn btn-danger" data-review-id="{{ user_review.pk }}">
                         Delete Review
                     </button>
                 </div>
@@ -48,45 +48,43 @@
         <div class="card-body d-flex">
             <!-- Reviewer Avatar -->
             <div class="me-4">
-                {% if review_data.profile.profile_picture %}
-                    <img src="{{ review_data.profile.profile_picture.url }}"
-                         alt="{{ review_data.review.user.full_name }}" class="rounded-circle" width="60" height="60">
-                {% else %}
-                    <img src="{% static 'images/stock_profile.png' %}" alt="Default Avatar" class="rounded-circle"
-                         width="60" height="60">
-                {% endif %}
+                <a href="{% url 'profile_details' review_data.review.user.pk %}">
+                    {% if review_data.profile.profile_picture %}
+                        <img src="{{ review_data.profile.profile_picture.url }}"
+                             alt="{{ review_data.review.user.full_name }}" class="rounded-circle" width="60"
+                             height="60">
+                    {% else %}
+                        <img src="{% static 'images/stock_profile.png' %}" alt="Default Avatar" class="rounded-circle"
+                             width="60" height="60">
+                    {% endif %}
+                </a>
             </div>
 
-            <!-- Review Content -->
             <div class="flex-grow-1">
                 <!-- Reviewer Name and Review Count -->
                 <div class="d-flex align-items-center mb-2">
                     <div>
-                        <h5 class="mb-0">{{ review_data.review.user.full_name }}</h5>
+                        <a href="{% url 'profile_details' review_data.review.user.pk %}" class="text-decoration-none">
+                            <h5 class="mb-0 text-muted">{{ review_data.review.user.full_name }}</h5>
+                        </a>
                         <small class="text-muted">{{ review_data.review.user.review_set.count }} reviews</small>
                     </div>
                 </div>
 
                 <!-- Rating Stars -->
                 <div class="mb-2">
-                    {% with review_rating=review_data.rating.rating %}
-                        {% if review_rating %}
-                            {% for i in "12345" %}
-                                {% if review_rating >= forloop.counter %}
-                                    <i class="fas fa-star text-warning"></i> <!-- Full star -->
-                                {% elif review_rating >= forloop.counter0|add:0.5 %}
-                                    <i class="fas fa-star-half-alt text-warning"></i> <!-- Half star -->
-                                {% else %}
-                                    <i class="far fa-star text-warning"></i> <!-- Empty star -->
-                                {% endif %}
-                            {% endfor %}
+                    {% with average_rating=review_data.rating.rating %}
+                        {% if average_rating %}
+
+                            {% include 'books/book-star-rating.html' %}
+
                         {% else %}
                             <small class="text-muted">No rating given</small>
                         {% endif %}
                     {% endwith %}
                 </div>
 
-                <!-- Review Content -->
+                <!-- Review Content TODO: make editable by moderators and superusers-->
                 <div>
                     <p><em>{{ review_data.review.tagline }}</em></p>
                     <p>{{ review_data.review.content }}</p>
@@ -94,7 +92,8 @@
 
                 <!-- Review Date -->
                 {% if review_data.review.created_at|dates_different:review_data.review.updated_at %}
-                    <small class="text-muted">Last updated: {{ review_data.review.updated_at|date:"F d, Y H:i" }}</small>
+                    <small class="text-muted">Last
+                        updated: {{ review_data.review.updated_at|date:"F d, Y H:i" }}</small>
                 {% else %}
                     <small class="text-muted">{{ review_data.review.created_at|date:"F d, Y H:i" }}</small>
                 {% endif %}
@@ -108,6 +107,31 @@
                     </button>
                 </div>
 
+
+                {% if comment.user == user or user.is_superuser or user|has_group:'Moderators' %}
+                    <div class="mt-3">
+                        <button class="btn btn-primary edit-review-btn" data-review-id="{{ review_data.review.pk }}">
+                            Edit Review
+                        </button>
+                        <button class="btn btn-danger delete-review-btn" data-review-id="{{ review_data.review.pk }}">
+                            Delete Review
+                        </button>
+
+                        <!-- Edit Review Form -->
+                        <form class="edit-review-form d-none" data-review-id="{{ review_data.review.pk }}"
+                              action="{% url 'edit-review' review_data.review.pk %}" method="post">
+                            {% csrf_token %}
+                            <textarea name="content" rows="4"
+                                      class="form-control">{{ review_data.review.content }}</textarea>
+                            <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
+                            <button type="button" class="btn btn-secondary mt-2 cancel-edit-btn"
+                                    data-review-id="{{ review_data.review.pk }}">Cancel
+                            </button>
+                        </form>
+                    </div>
+                {% endif %}
+
+
                 <hr>
 
             </div>
@@ -120,17 +144,40 @@
 {% if paginated_reviews.paginator.num_pages > 1 %}
     <nav aria-label="Reviews pagination" class="mt-4">
         <ul class="pagination justify-content-center">
-            {% if paginated_reviews.has_previous %}
+
+            <!-- First Page Link -->
+            {% if paginated_reviews.number > 1 %}
                 <li class="page-item">
-                    <a class="page-link" href="?page=1">&laquo; First</a>
+                    <a class="page-link"
+                       href="?page=1"
+                       aria-label="First">
+                        &laquo;
+                    </a>
                 </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ paginated_reviews.previous_page_number }}">Previous</a>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&laquo;</span>
                 </li>
             {% endif %}
 
+            <!-- Previous Page Link -->
+            {% if paginated_reviews.has_previous %}
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ paginated_reviews.previous_page_number }}"
+                       aria-label="Previous">
+                        &lsaquo;
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&lsaquo;</span>
+                </li>
+            {% endif %}
+
+            <!-- Page Number Links -->
             {% for num in paginated_reviews.paginator.page_range %}
-                {% if paginated_reviews.number == num %}
+                {% if num == paginated_reviews.number %}
                     <li class="page-item active">
                         <span class="page-link">{{ num }}</span>
                     </li>
@@ -138,54 +185,97 @@
                     <li class="page-item">
                         <a class="page-link" href="?page={{ num }}">{{ num }}</a>
                     </li>
+                {% elif num == 1 or num == paginated_reviews.paginator.num_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% if num == 1 and paginated_reviews.number > 4 %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% elif num == paginated_reviews.paginator.num_pages and paginated_reviews.number < paginated_reviews.paginator.num_pages|add:'-3' %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
                 {% endif %}
             {% endfor %}
 
+            <!-- Next Page Link -->
             {% if paginated_reviews.has_next %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ paginated_reviews.next_page_number }}">Next</a>
+                    <a class="page-link"
+                       href="?page={{ paginated_reviews.next_page_number }}"
+                       aria-label="Next">
+                        &rsaquo;
+                    </a>
                 </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ paginated_reviews.paginator.num_pages }}">Last &raquo;</a>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&rsaquo;</span>
                 </li>
             {% endif %}
+
+            <!-- Last Page Link -->
+            {% if paginated_reviews.number < paginated_reviews.paginator.num_pages %}
+                <li class="page-item">
+                    <a class="page-link"
+                       href="?page={{ paginated_reviews.paginator.num_pages }}"
+                       aria-label="Last">
+                        &raquo;
+                    </a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <span class="page-link" aria-hidden="true">&raquo;</span>
+                </li>
+            {% endif %}
+
         </ul>
     </nav>
 {% endif %}
 
-
-{#Edit/Delete Reviews#}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const editReviewBtn = document.getElementById("edit-review-btn");
-        const editReviewForm = document.getElementById("edit-review-form");
-        const cancelEditBtn = document.getElementById("cancel-edit-btn");
-        const deleteReviewBtn = document.getElementById("delete-review-btn");
-
         // Edit review functionality
-        if (editReviewBtn) {
+        const editReviewButtons = document.querySelectorAll(".edit-review-btn");
+        editReviewButtons.forEach(function (editReviewBtn) {
             editReviewBtn.addEventListener("click", function () {
+                const reviewId = editReviewBtn.dataset.reviewId;
+                const deleteReviewBtn = document.querySelector(`.delete-review-btn[data-review-id="${reviewId}"]`);
+                const editReviewForm = document.querySelector(`.edit-review-form[data-review-id="${reviewId}"]`);
+
                 editReviewBtn.classList.add("d-none");
                 deleteReviewBtn.classList.add("d-none"); // Hide Delete button while editing
                 editReviewForm.classList.remove("d-none");
             });
-        }
+        });
 
-        if (cancelEditBtn) {
+        // Cancel edit functionality
+        const cancelEditButtons = document.querySelectorAll(".cancel-edit-btn");
+        cancelEditButtons.forEach(function (cancelEditBtn) {
             cancelEditBtn.addEventListener("click", function () {
+                const reviewId = cancelEditBtn.dataset.reviewId;
+                const editReviewBtn = document.querySelector(`.edit-review-btn[data-review-id="${reviewId}"]`);
+                const deleteReviewBtn = document.querySelector(`.delete-review-btn[data-review-id="${reviewId}"]`);
+                const editReviewForm = document.querySelector(`.edit-review-form[data-review-id="${reviewId}"]`);
+
                 editReviewForm.classList.add("d-none");
                 editReviewBtn.classList.remove("d-none");
                 deleteReviewBtn.classList.remove("d-none"); // Show Delete button after canceling
             });
-        }
+        });
 
-        if (editReviewForm) {
+        // Handle edit review form submission
+        const editReviewForms = document.querySelectorAll(".edit-review-form");
+        editReviewForms.forEach(function (editReviewForm) {
             editReviewForm.addEventListener("submit", function (e) {
                 e.preventDefault();  // Prevent the form from submitting normally
 
+                const reviewId = editReviewForm.dataset.reviewId;
                 const url = editReviewForm.action;
                 const formData = new FormData(editReviewForm);
-                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                const csrfToken = editReviewForm.querySelector('[name=csrfmiddlewaretoken]').value;
 
                 fetch(url, {
                     method: 'POST',
@@ -198,9 +288,12 @@
                     .then(data => {
                         if (data.success) {
                             // Update the review content on the page
-                            document.querySelector(".card-body p").innerText = formData.get("content");
+                            const reviewContentP = editReviewForm.closest(".flex-grow-1").querySelectorAll("p")[1];
+                            reviewContentP.innerText = formData.get("content");
                             // Hide the form and show the "Edit" and "Delete" buttons again
                             editReviewForm.classList.add("d-none");
+                            const editReviewBtn = document.querySelector(`.edit-review-btn[data-review-id="${reviewId}"]`);
+                            const deleteReviewBtn = document.querySelector(`.delete-review-btn[data-review-id="${reviewId}"]`);
                             editReviewBtn.classList.remove("d-none");
                             deleteReviewBtn.classList.remove("d-none");
                         } else {
@@ -211,14 +304,15 @@
                         console.error('Error:', error);
                     });
             });
-        }
+        });
 
         // Delete review functionality
-        if (deleteReviewBtn) {
+        const deleteReviewButtons = document.querySelectorAll(".delete-review-btn");
+        deleteReviewButtons.forEach(function (deleteReviewBtn) {
             deleteReviewBtn.addEventListener("click", function (e) {
                 e.preventDefault();
 
-                const reviewId = deleteReviewBtn.dataset.reviewId;  // Get the correct reviewId from data attribute
+                const reviewId = deleteReviewBtn.dataset.reviewId;
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
                 if (!reviewId) {
@@ -226,7 +320,6 @@
                     return;
                 }
 
-                // Use POST method to delete the review
                 fetch(`/books/delete-review/${reviewId}/`, {
                     method: 'POST',
                     headers: {
@@ -237,8 +330,9 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Refresh the page after successful deletion
-                            location.reload();
+                            // Remove the review from the page
+                            const reviewElement = deleteReviewBtn.closest(".mb-4");
+                            reviewElement.remove();
                         } else {
                             console.error('Failed to delete review:', data.message);
                         }
@@ -247,129 +341,10 @@
                         console.error('Error:', error);
                     });
             });
-        }
+        });
     });
 </script>
 
-{#<script>#}
-{#    document.addEventListener("DOMContentLoaded", function () {#}
-{#        // Handle opening the comments modal#}
-{#        document.querySelectorAll(".open-comments-modal").forEach(button => {#}
-{#            button.addEventListener("click", function () {#}
-{#                const reviewId = button.dataset.reviewId;#}
-{#                loadCommentsModal(reviewId);#}
-{#            });#}
-{#        });#}
-{##}
-{#        function loadCommentsModal(reviewId) {#}
-{#            fetch(`/books/review-comments/${reviewId}/`, {#}
-{#                headers: {#}
-{#                    'X-Requested-With': 'XMLHttpRequest',#}
-{#                },#}
-{#            })#}
-{#                .then(response => {#}
-{#                    if (!response.ok) {#}
-{#                        throw new Error(`HTTP error! status: ${response.status}`);#}
-{#                    }#}
-{#                    return response.json();#}
-{#                })#}
-{#                .then(data => {#}
-{#                    // Insert the modal HTML into the page#}
-{#                    document.body.insertAdjacentHTML('beforeend', data.html);#}
-{#                    // Show the modal#}
-{#                    const modalElement = document.getElementById('comments-modal');#}
-{#                    const modal = new bootstrap.Modal(modalElement);#}
-{#                    modal.show();#}
-{##}
-{#                    // Initialize currentPage to 1 when modal is first opened#}
-{#                    modalElement.dataset.currentPage = '1';#}
-{##}
-{#                    // Attach event listeners#}
-{#                    attachModalEventListeners(reviewId);#}
-{##}
-{#                    // Remove the modal from DOM when hidden to prevent duplicates#}
-{#                    modalElement.addEventListener('hidden.bs.modal', function () {#}
-{#                        modalElement.remove();#}
-{#                    });#}
-{#                })#}
-{#                .catch(error => {#}
-{#                    console.error('Fetch error:', error);#}
-{#                });#}
-{#        }#}
-{##}
-{#        function attachModalEventListeners(reviewId) {#}
-{#            const modalElement = document.getElementById('comments-modal');#}
-{##}
-{#            // Handle pagination links inside the modal#}
-{#            document.querySelectorAll('#comments-modal .pagination a').forEach(link => {#}
-{#                link.addEventListener('click', function (e) {#}
-{#                    e.preventDefault();#}
-{#                    const page = this.getAttribute('data-page');#}
-{#                    // Update currentPage data attribute on the modal#}
-{#                    modalElement.dataset.currentPage = page;#}
-{#                    loadModalContent(reviewId, page);#}
-{#                });#}
-{#            });#}
-{##}
-{#            // Handle adding a new comment inside the modal#}
-{#            const form = document.getElementById('modal-add-comment-form');#}
-{#            if (form) {#}
-{#                form.addEventListener('submit', function (e) {#}
-{#                    e.preventDefault();#}
-{#                    const formData = new FormData(form);#}
-{#                    const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;#}
-{##}
-{#                    fetch(`/books/add-comment/${reviewId}/`, {#}
-{#                        method: 'POST',#}
-{#                        headers: {#}
-{#                            'X-CSRFToken': csrfToken,#}
-{#                            'X-Requested-With': 'XMLHttpRequest',#}
-{#                        },#}
-{#                        body: formData#}
-{#                    })#}
-{#                        .then(response => response.json())#}
-{#                        .then(data => {#}
-{#                            if (data.success) {#}
-{#                                // Get currentPage from modal's data attribute#}
-{#                                const currentPage = modalElement.dataset.currentPage || '1';#}
-{#                                // Reload modal content to include the new comment#}
-{#                                loadModalContent(reviewId, currentPage);#}
-{#                            } else {#}
-{#                                alert('Error adding comment.');#}
-{#                            }#}
-{#                        });#}
-{#                });#}
-{#            }#}
-{#        }#}
-{##}
-{#        function loadModalContent(reviewId, page = 1) {#}
-{#            fetch(`/books/review-comments/${reviewId}/?page=${page}`, {#}
-{#                headers: {#}
-{#                    'X-Requested-With': 'XMLHttpRequest',#}
-{#                },#}
-{#            })#}
-{#                .then(response => response.json())#}
-{#                .then(data => {#}
-{#                    // Instead of replacing entire modal content, update specific sections#}
-{#                    const commentsContainer = document.querySelector('#comments-modal .modal-body');#}
-{##}
-{#                    // Create a temporary div to parse the HTML#}
-{#                    const tempDiv = document.createElement('div');#}
-{#                    tempDiv.innerHTML = data.html;#}
-{##}
-{#                    // Update comments list#}
-{#                    const newCommentsList = tempDiv.querySelector('.modal-body').innerHTML;#}
-{#                    commentsContainer.innerHTML = newCommentsList;#}
-{##}
-{#                    // Re-attach event listeners after content update#}
-{#                    attachModalEventListeners(reviewId);#}
-{#                })#}
-{#                .catch(error => {#}
-{#                    console.error('Error loading modal content:', error);#}
-{#                });#}
-{#        }#}
-{#    });#}
-{#</script>#}
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

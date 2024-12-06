@@ -23,7 +23,7 @@
                                data-show-clear="true" data-show-caption="false" data-theme="krajee-fas"
                                data-url="{% url 'rate-book' book.pk %}"
                                 {% if user_rating %}
-                                    value="{{ user_rating }}"
+                               value="{{ user_rating }}"
                                 {% endif %}
                         >
                     </div>
@@ -32,38 +32,34 @@
 
             <!-- Right Section: Details -->
             <div class="col-lg-9 scrollable-right book-details-container">
-                <a href="" class="text-decoration-none">
-                    <h5 class="text-muted">
-                        {% if book.series_books.first.series.name %}
-                            {% with book.series_books.first as series_book %}
+                {% if book.series_books.first.series.name %}
+                    {% with book.series_books.first as series_book %}
+                        <a href="{% url 'series-detail' series_book.series.pk %}" class="text-decoration-none">
+                            <h5 class="text-muted">
                                 {{ series_book.series.name|default:"" }}, #
                                 {{ series_book.number }}
-                            {% endwith %}
-                        {% endif %}
-                    </h5>
-                </a>
+                            </h5>
+                        </a>
+                    {% endwith %}
+                {% endif %}
                 <h1 class="fw-bold">{{ book.title }}</h1>
                 <h5 class="text-secondary">
                     {% if book.authors.exists %}
                         {% for author in book.authors.all %}
-                            <small class="text-muted">
-                                {{ author.name }}{% if not forloop.last %}, {% endif %}</small>
+                            <a href="{% url 'author-details' author.pk %}" class="text-decoration-none">
+                                <h4 class="text-muted">
+                                    {{ author.name }}{% if not forloop.last %}, {% endif %}</h4>
+                            </a>
                         {% endfor %}
                     {% else %}
                         <small class="text-muted">Author of {{ book.title }}</small>
                     {% endif %}
                 </h5>
-                <div class="d-flex align-items-center my-3 mb-0 mt-0">
-                    <span class="text-warning stars">
-                        {% for i in "12345" %}
-                            {% if average_rating >= forloop.counter %}
-                                <i class="fas fa-star"></i>
-                            {% elif average_rating >= forloop.counter0|add:0.5 %}
-                                <i class="fas fa-star-half-alt"></i>
-                            {% else %}
-                                <i class="far fa-star"></i>
-                            {% endif %}
-                        {% endfor %}
+                <div class="d-flex align-items-center my-3 mb-2 mt-2">
+                    <span class="stars">
+                        
+                        {% include 'books/book-star-rating.html' %}
+                        
                     </span>
                     <span class="average-rating">{{ average_rating|default:'' }}</span>
                     <span class="rating-count-review">
@@ -71,6 +67,13 @@
                             <small class="text-muted">{{ rating_count }} ratings</small>
                         {% else %}
                             <small class="text-muted">{{ rating_count }} rating</small>
+                        {% endif %}
+                    </span>
+                    <span class="rating-count-review">
+                        {% if review_count != 1 %}
+                            <small class="text-muted">{{ review_count }} reviews</small>
+                        {% else %}
+                            <small class="text-muted">{{ review_count }} review</small>
                         {% endif %}
                     </span>
                 </div>
@@ -94,7 +97,6 @@
                     <li>{{ book.pages }} pages</li>
                     <li>First published {{ book.publication_date }}</li>
                 </ul>
-                <!-- Add reviews or other sections here -->
 
                 {% include 'reviews/write-show-reviews.html' %}
 
@@ -107,22 +109,22 @@
             // Use event delegation to handle all reading list actions
             $(document).on('click', '.reading-list-dropdown .dropdown-item', function (e) {
                 e.preventDefault();
-    
+
                 const dropdownContainer = $(this).closest('.reading-list-dropdown');
                 const bookId = dropdownContainer.data('book-id');
                 const action = $(this).data('action');
                 const listType = $(this).data('list-type');
                 const dropdownButton = dropdownContainer.find('.dropdown-toggle');
                 const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
-    
-                const url = action === 'add' 
+
+                const url = action === 'add'
                     ? '{% url "add-to-reading-list" %}'
                     : '{% url "remove-from-reading-list" %}';
-    
+
                 const data = action === 'add'
-                    ? { book_id: bookId, list_type: listType }
-                    : { book_id: bookId };
-    
+                    ? {book_id: bookId, list_type: listType}
+                    : {book_id: bookId};
+
                 $.ajax({
                     url: url,
                     method: 'POST',
@@ -223,10 +225,10 @@
         document.addEventListener("DOMContentLoaded", function () {
             const summaryText = document.getElementById("summary-text");
             const toggleSummary = document.getElementById("toggle-summary");
-    
+
             toggleSummary.addEventListener("click", function (event) {
                 event.preventDefault(); // Prevent the default anchor behavior
-    
+
                 if (summaryText.classList.contains("text-truncate")) {
                     summaryText.classList.remove("text-truncate");
                     toggleSummary.textContent = "Show less ▲";
@@ -238,11 +240,3 @@
         });
     </script>
 {% endblock %}
-
-
-
-
-
-
-
-
