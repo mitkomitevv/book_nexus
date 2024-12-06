@@ -97,9 +97,9 @@ var requirejs, require, define;
             // Starts with a '.' so need the baseName
             if (name[0].charAt(0) === '.' && baseParts) {
                 //Convert baseName to array, and lop off the last part,
-                //so that . matches that 'books' and not name of the baseName's
+                //so that . matches that 'directory' and not name of the baseName's
                 //module. For instance, baseName of 'one/two/three', maps to
-                //'one/two/three.js', but we want the books, 'one/two' for
+                //'one/two/three.js', but we want the directory, 'one/two' for
                 //this normalization.
                 normalizedBaseParts = baseParts.slice(0, baseParts.length - 1);
                 name = normalizedBaseParts.concat(name);
