@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="a095e55f-2f7b-4b84-b0b6-5832f7c99634" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/../.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/book_nexus.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/book_nexus.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/encodings.xml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/apps.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/choices.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/forms.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/managers.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/migrations/0001_initial.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/migrations/0002_profile_country_profile_gender.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/migrations/0003_profile_profile_picture.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/migrations/0004_rename_bio_profile_interests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/migrations/0005_alter_profile_gender.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/migrations/0006_follow.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/migrations/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/signals.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/templatetags/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/templatetags/custom_tags.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/urls.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/accounts/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/api/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/api/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/api/apps.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/api/migrations/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/api/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/api/serializers.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/api/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/api/urls.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/api/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/asgi.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/apps.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/author_urls.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/forms.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0001_initial.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0002_comment.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0003_author_picture_book_cover.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0004_book_publication_date.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0005_rename_publication_date_book_publication_year.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0006_rename_publication_year_book_publication_date.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0007_remove_book_isbn_rating.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0008_alter_rating_user.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0009_alter_rating_rating.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0010_series_seriesbook.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0011_remove_author_books_book_authors.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0012_alter_book_options_book_created_at.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0013_book_pages.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0014_remove_review_rating.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0015_series_authors.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0016_alter_book_authors.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/0017_alter_seriesbook_unique_together.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/migrations/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/mixins.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/templatetags/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/templatetags/user_extras.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/urls.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/books/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/common/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/common/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/common/apps.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/common/migrations/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/common/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/common/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/common/urls.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/common/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/admin.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/apps.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/migrations/0001_initial.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/migrations/0002_currentlyreading_favorites_read_wanttoread_and_more.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/migrations/__init__.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/mixins.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/models.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/tests.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/urls.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/reading_list/views.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/settings.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/urls.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/book_nexus/wsgi.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/manage.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/css/select2.min.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/css/styles.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/images/bookshelf.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/images/default_cover.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/images/logo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/images/stock_profile.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/js/select2.full.min.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/accounts/login.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/accounts/profile-details.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/accounts/profile-edit.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/accounts/register.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/authors/author-create.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/authors/author-details.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/books/book-create.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/books/book-details.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/books/book-edit.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/books/book-list.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/books/book-star-rating.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/books/read-status-dropdown.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/books/series-details.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/common/base.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/common/home-no-profile.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/common/home-with-profile.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/common/nav-bar.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/reading_lists/show-reading-list.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/reviews/modal_comments.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/reviews/write-show-reviews.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/testing.html" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "customColor": "",
+  "associatedIndex": 7
+}]]></component>
+  <component name="ProjectId" id="2pqliq4wKrDmi29X0JOzyiryeZC" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "dev",
+    "last_opened_file_path": "D:/Python_Projects/book_nexus",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-e768b9ed790e-JavaScript-PY-243.21565.199" />
+        <option value="bundled-python-sdk-cab1f2013843-4ae2d6a61b08-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.21565.199" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="a095e55f-2f7b-4b84-b0b6-5832f7c99634" name="Changes" comment="" />
+      <created>1733501618889</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1733501618889</updated>
+      <workItem from="1733501620782" duration="689000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>
