@@ -126,6 +126,7 @@ celerybeat.pid
 .env.dev
 .env.prod
 .venv
+.idea
 env/
 venv/
 ENV/
