@@ -9,21 +9,21 @@
 
                 {% if source_view == 'BookSearchView' %}
                     {% if books %}
-                        <h2 class="mb-4 mt-4">Your search results for "{{ query }}"</h2>
+                        <h2 class="mb-4">Your search results for "{{ query }}"</h2>
                     {% else %}
                         <div class="text-center">
-                            <h2 class="mb-4 mt-4">No results found for "{{ query }}". Try a different search.</h2>
+                            <h2 class="mb-4">No results found for "{{ query }}". Try a different search.</h2>
                             <img src="{% static 'images/book.png' %}" alt="book img" class="img-fluid">
                         </div>
                     {% endif %}
                 {% elif source_view == 'BookListView' %}
-                    <h2 class="mb-4 mt-4">All Books</h2>
+                    <h2 class="mb-4">All Books</h2>
                 {% elif source_view == 'ShowAuthorBooksView' %}
-                    <h2 class="mb-4 mt-4">{{ author.name }}'s books</h2>
+                    <h2 class="mb-4">{{ author.name }}'s books</h2>
                 {% elif source_view == 'UserReadingListView' %}
-                    <h2 class="mb-4 mt-4">{{ user_data.full_name }}'s {{ list_type }} shelf</h2>
+                    <h2 class="mb-4">{{ user_data.full_name }}'s {{ list_type }} shelf</h2>
                 {% else %}
-                    <h2 class="mb-4 mt-4">Default Header</h2>
+                    <h2 class="mb-4">Default Header</h2>
                 {% endif %}
 
                 {% for book in books %}

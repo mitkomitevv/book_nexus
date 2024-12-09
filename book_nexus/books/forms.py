@@ -147,13 +147,18 @@ class AuthorBaseForm(forms.ModelForm):
     class Meta:
         model = Author
         fields = '__all__'
-
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+        }
 
 class AuthorCreateForm(AuthorBaseForm):
-    class Meta(AuthorBaseForm.Meta):
         pass
 
 
 class AuthorUpdateForm(AuthorBaseForm):
-    class Meta(AuthorBaseForm.Meta):
+        pass
+
+class AuthorDeleteForm(AuthorBaseForm):
         pass

@@ -27,10 +27,10 @@
                     <li class="nav-item">
                         <a class="nav-link text-black" href="{% url 'author-create' %}">Add Author</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-black" href="{% url 'show-all-books' %}">Books</a>
-                    </li>
                 {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link text-black" href="{% url 'show-all-books' %}">Books</a>
+                </li>
                 {% if request.user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link text-black" href="{% url 'profile_details' request.user.pk %}">Profile</a>
@@ -41,7 +41,7 @@
                     </form>
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link text-success"  href="{% url 'login' %}">Sign in</a>
+                        <a class="btn btn-success" href="{% url 'login' %}">Sign in</a>
                     </li>
                 {% endif %}
             </ul>
