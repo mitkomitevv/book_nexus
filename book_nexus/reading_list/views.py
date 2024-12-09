@@ -3,6 +3,8 @@ from django.db import transaction
 from django.http import JsonResponse
 from django.views import View
 from django.shortcuts import get_object_or_404
+from django.views.generic import ListView
+
 from .models import WantToRead, CurrentlyReading, Read, Favorites, Book
 
 

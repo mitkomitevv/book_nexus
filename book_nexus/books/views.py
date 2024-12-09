@@ -341,6 +341,13 @@ class AuthorDetailsView(DetailView):
         context['series_list'] = self.object.series.prefetch_related('series_books__book')
         return context
 
+# TODO: Make these
+class AuthorUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Author
+
+class AuthorDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Author
+
 class ShowAuthorBooksView(BookQuerysetMixin, UserReadingListMixin, ListView):
     model = Book
     template_name = 'books/book-list.html'

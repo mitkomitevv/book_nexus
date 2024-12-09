@@ -152,3 +152,8 @@ class AuthorBaseForm(forms.ModelForm):
 class AuthorCreateForm(AuthorBaseForm):
     class Meta(AuthorBaseForm.Meta):
         pass
+
+
+class AuthorUpdateForm(AuthorBaseForm):
+    class Meta(AuthorBaseForm.Meta):
+        pass
