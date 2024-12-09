@@ -1,7 +1,7 @@
 from django.urls import path, include
 from book_nexus.books.views import BookCreateView, BookListView, BookDetailsView, RateBookView, BookEditView, \
-    book_delete_view, AddReviewView, EditReviewView, DeleteReviewView, AddCommentView, \
-    ReviewCommentsModalView, DeleteCommentView, EditCommentView, BookSearchView, SeriesDetailView
+    AddReviewView, EditReviewView, DeleteReviewView, AddCommentView, \
+    ReviewCommentsModalView, DeleteCommentView, EditCommentView, BookSearchView, SeriesDetailView, book_delete_view
 
 urlpatterns = [
     path('show-all-books/', BookListView.as_view(), name='show-all-books'),

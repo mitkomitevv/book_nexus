@@ -6,10 +6,14 @@
         <div class="row">
             <!-- Author Photo and Statistics -->
             <div class="col-md-4 text-center">
-                <img src="
-                        
+                <img src=" 
                         {% if author.picture %}{{ author.picture.url }}{% else %}{% static 'images/stock_profile.png' %}{% endif %}"
                      alt="{{ author.name }}" class="img-fluid rounded-circle mb-4 shadow">
+
+                <div class="mt-1 mb-1">
+                    <a href="{% url 'author-edit' author.pk %}" class="btn btn-primary">Edit Author</a>
+                </div>
+            
                 <div class="author-stats bg-light p-3 rounded shadow-sm">
                     <h4 class="text-primary mb-3">{{ author.name }}</h4>
                     {% if author.bio %}
@@ -22,8 +26,8 @@
 
             <!-- Author's Books -->
             <div class="col-md-8 mx-auto">
-                <h3 class="mb-4">{{ author.name }}'s Books</h3>
                 <div class="col-md-8 mx-auto">
+                    <h3 class="mb-4">{{ author.name }}'s Books</h3>
                     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
                         {% for book in author.books.all|slice:":8" %}
                             <div class="col">
@@ -31,7 +35,8 @@
                                     <a href="{% url 'book-details' book.pk %}" class="text-decoration-none">
                                         <div class="position-relative">
                                             <img src="{{ book.cover.url }}" alt="{{ book.title }} Cover"
-                                                 class="card-img-top img-fluid rounded book-author-cover" loading="lazy">
+                                                 class="card-img-top img-fluid rounded book-author-cover"
+                                                 loading="lazy">
                                             <div class="book-title-overlay d-flex align-items-center justify-content-center">
                                                 <h5 class="text-white text-center mb-0 px-2">{{ book.title }}</h5>
                                             </div>

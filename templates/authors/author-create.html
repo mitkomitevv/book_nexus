@@ -1,4 +1,53 @@
+{#{% extends 'common/base.html' %}#}
+{#{% block content %}#}
+{#    <div class="container pb-5 mb-5">#}
+{#        <div class="row justify-content-center">#}
+{#            <div class="col-lg-6 col-md- col-sm-12 mx-auto">#}
+{#                <h1 class="text-center mb-4">Add Author</h1>#}
+{#                <form method="post" enctype="multipart/form-data" class="mb-5">#}
+{#                    {% csrf_token %}#}
+{#                    <div class="mx-auto">#}
+{#                        {% for field in form %}#}
+{#                            {% if field.name == 'bio' %}#}
+{#                                <div class="mb-3">#}
+{#                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>#}
+{#                                    <textarea#}
+{#                                            name="{{ field.html_name }}"#}
+{#                                            id="{{ field.id_for_label }}"#}
+{#                                            class="form-control"#}
+{#                                            rows="4"#}
+{#                                    >{{ field.value|default_if_none:'' }}</textarea>#}
+{#                                    {{ field.errors }}#}
+{#                                </div>#}
+{#                            {% else %}#}
+{#                                <div class="mb-3">#}
+{#                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>#}
+{#                                    <input#}
+{#                                            type="{{ field.field.widget.input_type }}"#}
+{#                                            name="{{ field.html_name }}"#}
+{#                                            id="{{ field.id_for_label }}"#}
+{#                                            class="form-control"#}
+{#                                            value="{{ field.value|default_if_none:'' }}"#}
+{#                                    >#}
+{#                                    {{ field.errors }}#}
+{#                                </div>#}
+{#                            {% endif %}#}
+{#                        {% endfor %}#}
+{#                        <div class="d-grid gap-2 mt-4 mb-4">#}
+{#                            <button class="btn btn-dark" type="submit">Add Author</button>#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </form>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
+{#{% endblock %}#}
+
+
+<!-- templates/authors/add_author.html -->
+
 {% extends 'common/base.html' %}
+
 {% block content %}
     <div class="container pb-5 mb-5">
         <div class="row justify-content-center">
@@ -6,36 +55,40 @@
                 <h1 class="text-center mb-4">Add Author</h1>
                 <form method="post" enctype="multipart/form-data" class="mb-5">
                     {% csrf_token %}
-                    <div class="mx-auto">
-                        {% for field in form %}
-                            {% if field.name == 'bio' %}
-                                <div class="mb-3">
-                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                    <textarea
-                                            name="{{ field.html_name }}"
-                                            id="{{ field.id_for_label }}"
-                                            class="form-control"
-                                            rows="4"
-                                    >{{ field.value|default_if_none:'' }}</textarea>
-                                    {{ field.errors }}
-                                </div>
-                            {% else %}
-                                <div class="mb-3">
-                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                    <input
-                                            type="{{ field.field.widget.input_type }}"
-                                            name="{{ field.html_name }}"
-                                            id="{{ field.id_for_label }}"
-                                            class="form-control"
-                                            value="{{ field.value|default_if_none:'' }}"
-                                    >
-                                    {{ field.errors }}
-                                </div>
-                            {% endif %}
-                        {% endfor %}
-                        <div class="d-grid gap-2 mt-4 mb-4">
-                            <button class="btn btn-dark" type="submit">Add Author</button>
-                        </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">{{ form.name.label }}</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger">
+                                {{ form.name.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.bio.id_for_label }}" class="form-label">{{ form.bio.label }}</label>
+                        {{ form.bio }}
+                        {% if form.bio.errors %}
+                            <div class="text-danger">
+                                {{ form.bio.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.picture.id_for_label }}" class="form-label">{{ form.picture.label }}</label>
+                        {{ form.picture }}
+                        {% if form.picture.errors %}
+                            <div class="text-danger">
+                                {{ form.picture.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4 mb-4">
+                        <button class="btn btn-dark" type="submit">Add Author</button>
+                        <a href="{% url 'home' %}" class="btn btn-secondary">Cancel</a>
                     </div>
                 </form>
             </div>

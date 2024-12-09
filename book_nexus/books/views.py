@@ -10,20 +10,21 @@ from django.utils import timezone
 from django.views import View
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
 
-from book_nexus.books.forms import BookCreateForm, AuthorCreateForm, BookUpdateForm, ReviewForm
-from book_nexus.books.mixins import BookQuerysetMixin
+from book_nexus.books.decorators import librarian_required
+from book_nexus.books.forms import BookCreateForm, AuthorCreateForm, BookUpdateForm, ReviewForm, AuthorUpdateForm
+from book_nexus.books.mixins import BookQuerysetMixin, LibrariansPermission, ModeratorsPermission
 from book_nexus.books.models import Book, Rating, Author, Review, Comment, Series
 from book_nexus.reading_list.mixins import UserReadingListMixin
 
 
-class BookCreateView(LoginRequiredMixin, CreateView):
+class BookCreateView(LoginRequiredMixin, LibrariansPermission, CreateView):
     model = Book
     form_class = BookCreateForm
     template_name = 'books/book-create.html'
     success_url = reverse_lazy('home')
 
 
-class BookEditView(LoginRequiredMixin, UpdateView):
+class BookEditView(LoginRequiredMixin, LibrariansPermission, UpdateView):
     model = Book
     form_class = BookUpdateForm
     template_name = 'books/book-edit.html'
@@ -33,14 +34,15 @@ class BookEditView(LoginRequiredMixin, UpdateView):
         form = super().get_form(form_class)
         if self.object.publication_date:
             form.fields['publication_date'].initial = self.object.publication_date
+
         return form
 
 
+@librarian_required
 def book_delete_view(request, pk):
     book = get_object_or_404(Book, pk=pk)
     book.delete()
-    messages.success(request, f'"{book.title}" has been deleted.')  # optional
-    return redirect('book-list')
+    return redirect('show-all-books')
 
 
 class BookListView(BookQuerysetMixin ,UserReadingListMixin, ListView):
@@ -117,57 +119,55 @@ class BookDetailsView(UserReadingListMixin, DetailView):
         return context
 
 
-class AddReviewView(LoginRequiredMixin, View):
-    def post(self, request, pk):
-        if not request.user.is_authenticated:
-            return redirect('login')
+class AddReviewView(LoginRequiredMixin, CreateView):
+    model = Review
+    form_class = ReviewForm
 
-        book = get_object_or_404(Book, pk=pk)
-        form = ReviewForm(request.POST)
+    def form_valid(self, form):
+        form.instance.user = self.request.user
+        form.instance.book = get_object_or_404(Book, pk=self.kwargs['pk'])
+        messages.success(self.request, 'Your review has been submitted.')
+        return super().form_valid(form)
 
-        if form.is_valid():
-            review = form.save(commit=False)
-            review.user = request.user
-            review.book = book
-            review.save()
-            messages.success(request, 'Your review has been submitted.')
-        else:
-            messages.error(request, 'There was an error submitting your review.')
+    def form_invalid(self, form):
+        messages.error(self.request, 'There was an error submitting your review.')
+        return redirect('book-details', pk=self.kwargs['pk'])
 
-        return redirect('book-details', pk=pk)
+    def get_success_url(self):
+        return reverse_lazy('book-details', kwargs={'pk': self.kwargs['pk']})
 
 
-class EditReviewView(LoginRequiredMixin, UserPassesTestMixin, View):
+class EditReviewView(LoginRequiredMixin, ModeratorsPermission, UpdateView):
+    model = Review
+    form_class = ReviewForm
+    success_url = reverse_lazy('show-all-books')
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Review, pk=self.kwargs['review_pk'])
+
     def test_func(self):
-        review = get_object_or_404(Review, pk=self.kwargs['review_pk'])
+        review = self.get_object()
         return (
-                self.request.user == review.user or
-                self.request.user.is_superuser or
-                self.request.user.groups.filter(name='Moderators').exists()
+                super().test_func() or
+                self.request.user == review.user
         )
 
-    def post(self, request, review_pk):
-        review = get_object_or_404(Review, pk=review_pk)
+    def form_valid(self, form):
+        self.object = form.save()
+        messages.success(self.request, "Your review has been updated successfully.")
+        return JsonResponse({'success': True, 'message': 'Review updated successfully.'})
 
-        if not self.test_func():
-            return JsonResponse({'success': False, 'message': 'Permission denied.'})
-
-        content = request.POST.get('content')
-        if content:
-            review.content = content
-            review.save()
-            return JsonResponse({'success': True, 'message': 'Review updated successfully.'})
-        else:
-            return JsonResponse({'success': False, 'message': 'Content cannot be empty.'})
+    def form_invalid(self, form):
+        errors = form.errors.as_json()
+        return JsonResponse({'success': False, 'message': 'There were errors in the form.', 'errors': errors})
 
 
-class DeleteReviewView(LoginRequiredMixin, UserPassesTestMixin, View):
+class DeleteReviewView(LoginRequiredMixin, ModeratorsPermission, View):
     def test_func(self):
         review = get_object_or_404(Review, pk=self.kwargs['review_pk'])
         return (
-                self.request.user == review.user or
-                self.request.user.is_superuser or
-                self.request.user.groups.filter(name='Moderators').exists()
+                super().test_func() or
+                self.request.user == review.user
         )
 
     def post(self, request, review_pk):
@@ -209,7 +209,7 @@ class AddCommentView(LoginRequiredMixin, View):
         return JsonResponse(response_data)
 
 
-class EditCommentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class EditCommentView(LoginRequiredMixin, ModeratorsPermission, UpdateView):
     model = Comment
     fields = ['content']
     pk_url_kwarg = 'comment_pk'
@@ -217,9 +217,8 @@ class EditCommentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     def test_func(self):
         comment = self.get_object()
         return (
-                self.request.user == comment.user or
-                self.request.user.is_superuser or
-                self.request.user.groups.filter(name='Moderators').exists()
+                super().test_func() or
+                self.request.user == comment.user
         )
 
     def form_valid(self, form):
@@ -236,7 +235,7 @@ class EditCommentView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
             return super().render_to_response(context, **response_kwargs)
 
 
-class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class DeleteCommentView(LoginRequiredMixin, ModeratorsPermission, DeleteView):
     model = Comment
     pk_url_kwarg = 'comment_pk'
     success_url = reverse_lazy('show-all-books')
@@ -244,9 +243,9 @@ class DeleteCommentView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def test_func(self):
         comment = self.get_object()
         return (
-                self.request.user == comment.user or
-                self.request.user.is_superuser or
-                self.request.user.groups.filter(name='Moderators').exists()
+                super().test_func() or
+                self.request.user == comment.user
+
         )
 
     def post(self, request, *args, **kwargs):
@@ -323,7 +322,7 @@ class RateBookView(LoginRequiredMixin, View):
 
 
 # TODO: PERMISSIONS!!!
-class AuthorCreateView(LoginRequiredMixin, CreateView):
+class AuthorCreateView(LoginRequiredMixin, LibrariansPermission, CreateView):
     model = Author
     form_class = AuthorCreateForm
     template_name = 'authors/author-create.html'
@@ -341,11 +340,16 @@ class AuthorDetailsView(DetailView):
         context['series_list'] = self.object.series.prefetch_related('series_books__book')
         return context
 
-# TODO: Make these
-class AuthorUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
-    model = Author
 
-class AuthorDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+class AuthorUpdateView(LoginRequiredMixin, UpdateView):
+    model = Author
+    form_class = AuthorUpdateForm
+    template_name = 'authors/author-edit.html'
+
+    def get_success_url(self):
+        return reverse_lazy('author-details', kwargs={'pk': self.object.pk})
+
+class AuthorDeleteView(LoginRequiredMixin, DeleteView):
     model = Author
 
 class ShowAuthorBooksView(BookQuerysetMixin, UserReadingListMixin, ListView):
