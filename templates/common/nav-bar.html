@@ -1,5 +1,6 @@
+{% load user_extras %}
 {% load static %}
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+<nav class="navbar navbar-expand-lg fixed-top">
     <div class="container">
         <a href="{% url 'home' %}" class="me-2">
             <img class="logo" src="{% static 'images/logo.png' %}" alt="book">
@@ -19,23 +20,28 @@
         </form>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'home' %}">Home</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'show-all-books' %}">Books</a>
-                </li>
+                {% if user.is_superuser or user|has_group:'Librarians' %}
+                    <li class="nav-item">
+                        <a class="nav-link text-black" href="{% url 'create-book' %}">Add Book</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-black" href="{% url 'author-create' %}">Add Author</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-black" href="{% url 'show-all-books' %}">Books</a>
+                    </li>
+                {% endif %}
                 {% if request.user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'profile_details' request.user.pk %}">Profile</a>
+                        <a class="nav-link text-black" href="{% url 'profile_details' request.user.pk %}">Profile</a>
                     </li>
                     <form action="{% url 'logout' %}" method="post">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-danger">Logout</button>
+                        <button type="submit" class="btn btn-danger">Logout</button>
                     </form>
                 {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Sign in</a>
+                        <a class="nav-link text-success"  href="{% url 'login' %}">Sign in</a>
                     </li>
                 {% endif %}
             </ul>

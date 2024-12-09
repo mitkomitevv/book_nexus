@@ -7,25 +7,31 @@
         <h5 class="card-title">Your Review</h5>
         <div class="card mt-2">
             <div class="card-body">
-                <p>{{ user_review.content }}</p>
+                <p class="review-content">{{ user_review.content }}</p>
                 {% if user_review.created_at|dates_different:user_review.updated_at %}
                     <small class="text-muted">Last updated: {{ user_review.updated_at|date:"F d, Y H:i" }}</small>
                 {% else %}
                     <small class="text-muted">{{ user_review.created_at|date:"F d, Y H:i" }}</small>
                 {% endif %}
-                <div>
-                    <button id="edit-review-btn" class="btn btn-primary">Edit Review</button>
+                <div class="mt-2">
+                    <!-- Use same classes and data attributes as bottom reviews -->
+                    <button class="btn btn-primary edit-review-btn" data-review-id="{{ user_review.pk }}">
+                        Edit Review
+                    </button>
+                    <button class="btn btn-danger delete-review-btn" data-review-id="{{ user_review.pk }}">
+                        Delete Review
+                    </button>
 
-                    <form id="edit-review-form" action="{% url 'edit-review' user_review.pk %}" method="post"
-                          class="d-none">
+                    <!-- Edit form for top review -->
+                    <form class="edit-review-form d-none mt-3" data-review-id="{{ user_review.pk }}"
+                          action="{% url 'edit-review' user_review.pk %}" method="post">
                         {% csrf_token %}
                         <textarea name="content" rows="4" class="form-control">{{ user_review.content }}</textarea>
                         <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
-                        <button type="button" id="cancel-edit-btn" class="btn btn-secondary mt-2">Cancel</button>
+                        <button type="button" class="btn btn-secondary mt-2 cancel-edit-btn" data-review-id="{{ user_review.pk }}">
+                            Cancel
+                        </button>
                     </form>
-                    <button id="delete-review-btn" class="btn btn-danger" data-review-id="{{ user_review.pk }}">
-                        Delete Review
-                    </button>
                 </div>
             </div>
         </div>
@@ -42,9 +48,10 @@
     {% endif %}
 {% endif %}
 <hr>
+
 <h5>Reviews</h5>
 {% for review_data in reviews_with_comments %}
-    <div class="mb-4 mt-5">
+    <div class="card mb-4 mt-5">
         <div class="card-body d-flex">
             <!-- Reviewer Avatar -->
             <div class="me-4">
@@ -75,40 +82,34 @@
                 <div class="mb-2">
                     {% with average_rating=review_data.rating.rating %}
                         {% if average_rating %}
-
                             {% include 'books/book-star-rating.html' %}
-
                         {% else %}
                             <small class="text-muted">No rating given</small>
                         {% endif %}
                     {% endwith %}
                 </div>
 
-                <!-- Review Content TODO: make editable by moderators and superusers-->
-                <div>
-                    <p><em>{{ review_data.review.tagline }}</em></p>
-                    <p>{{ review_data.review.content }}</p>
-                </div>
+                <!-- Review Content -->
+                <p><em>{{ review_data.review.tagline }}</em></p>
+                <p class="review-content">{{ review_data.review.content }}</p>
 
                 <!-- Review Date -->
                 {% if review_data.review.created_at|dates_different:review_data.review.updated_at %}
-                    <small class="text-muted">Last
-                        updated: {{ review_data.review.updated_at|date:"F d, Y H:i" }}</small>
+                    <small class="text-muted">Last updated: {{ review_data.review.updated_at|date:"F d, Y H:i" }}</small>
                 {% else %}
                     <small class="text-muted">{{ review_data.review.created_at|date:"F d, Y H:i" }}</small>
                 {% endif %}
 
                 <!-- Comments Section -->
                 <div class="comments-section mt-4">
-                    <button class="btn btn-link open-comments-modal"
-                            data-review-id="{{ review_data.review.pk }}">
+                    <button class="btn btn-link open-comments-modal" data-review-id="{{ review_data.review.pk }}">
                         <span>Comments</span>
                         <i class="fa-regular fa-comment ms-2"></i>
                     </button>
                 </div>
 
-
                 {% if comment.user == user or user.is_superuser or user|has_group:'Moderators' %}
+                    <hr>
                     <div class="mt-3">
                         <button class="btn btn-primary edit-review-btn" data-review-id="{{ review_data.review.pk }}">
                             Edit Review
@@ -118,11 +119,10 @@
                         </button>
 
                         <!-- Edit Review Form -->
-                        <form class="edit-review-form d-none" data-review-id="{{ review_data.review.pk }}"
+                        <form class="edit-review-form d-none mt-3" data-review-id="{{ review_data.review.pk }}"
                               action="{% url 'edit-review' review_data.review.pk %}" method="post">
                             {% csrf_token %}
-                            <textarea name="content" rows="4"
-                                      class="form-control">{{ review_data.review.content }}</textarea>
+                            <textarea name="content" rows="4" class="form-control">{{ review_data.review.content }}</textarea>
                             <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
                             <button type="button" class="btn btn-secondary mt-2 cancel-edit-btn"
                                     data-review-id="{{ review_data.review.pk }}">Cancel
@@ -130,10 +130,7 @@
                         </form>
                     </div>
                 {% endif %}
-
-
-                <hr>
-
+                
             </div>
         </div>
     </div>
@@ -144,97 +141,58 @@
 {% if paginated_reviews.paginator.num_pages > 1 %}
     <nav aria-label="Reviews pagination" class="mt-4">
         <ul class="pagination justify-content-center">
-
-            <!-- First Page Link -->
+            <!-- Pagination controls as before -->
             {% if paginated_reviews.number > 1 %}
                 <li class="page-item">
-                    <a class="page-link"
-                       href="?page=1"
-                       aria-label="First">
-                        &laquo;
-                    </a>
+                    <a class="page-link" href="?page=1" aria-label="First">&laquo;</a>
                 </li>
             {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link" aria-hidden="true">&laquo;</span>
-                </li>
+                <li class="page-item disabled"><span class="page-link" aria-hidden="true">&laquo;</span></li>
             {% endif %}
 
-            <!-- Previous Page Link -->
             {% if paginated_reviews.has_previous %}
                 <li class="page-item">
-                    <a class="page-link"
-                       href="?page={{ paginated_reviews.previous_page_number }}"
-                       aria-label="Previous">
-                        &lsaquo;
-                    </a>
+                    <a class="page-link" href="?page={{ paginated_reviews.previous_page_number }}" aria-label="Previous">&lsaquo;</a>
                 </li>
             {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link" aria-hidden="true">&lsaquo;</span>
-                </li>
+                <li class="page-item disabled"><span class="page-link" aria-hidden="true">&lsaquo;</span></li>
             {% endif %}
 
-            <!-- Page Number Links -->
             {% for num in paginated_reviews.paginator.page_range %}
                 {% if num == paginated_reviews.number %}
-                    <li class="page-item active">
-                        <span class="page-link">{{ num }}</span>
-                    </li>
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
                 {% elif num > paginated_reviews.number|add:'-3' and num < paginated_reviews.number|add:'3' %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
                 {% elif num == 1 or num == paginated_reviews.paginator.num_pages %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-                    </li>
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
                     {% if num == 1 and paginated_reviews.number > 4 %}
-                        <li class="page-item disabled">
-                            <span class="page-link">...</span>
-                        </li>
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
                     {% elif num == paginated_reviews.paginator.num_pages and paginated_reviews.number < paginated_reviews.paginator.num_pages|add:'-3' %}
-                        <li class="page-item disabled">
-                            <span class="page-link">...</span>
-                        </li>
+                        <li class="page-item disabled"><span class="page-link">...</span></li>
                     {% endif %}
                 {% endif %}
             {% endfor %}
 
-            <!-- Next Page Link -->
             {% if paginated_reviews.has_next %}
                 <li class="page-item">
-                    <a class="page-link"
-                       href="?page={{ paginated_reviews.next_page_number }}"
-                       aria-label="Next">
-                        &rsaquo;
-                    </a>
+                    <a class="page-link" href="?page={{ paginated_reviews.next_page_number }}" aria-label="Next">&rsaquo;</a>
                 </li>
             {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link" aria-hidden="true">&rsaquo;</span>
-                </li>
+                <li class="page-item disabled"><span class="page-link" aria-hidden="true">&rsaquo;</span></li>
             {% endif %}
 
-            <!-- Last Page Link -->
             {% if paginated_reviews.number < paginated_reviews.paginator.num_pages %}
                 <li class="page-item">
-                    <a class="page-link"
-                       href="?page={{ paginated_reviews.paginator.num_pages }}"
-                       aria-label="Last">
-                        &raquo;
-                    </a>
+                    <a class="page-link" href="?page={{ paginated_reviews.paginator.num_pages }}" aria-label="Last">&raquo;</a>
                 </li>
             {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link" aria-hidden="true">&raquo;</span>
-                </li>
+                <li class="page-item disabled"><span class="page-link" aria-hidden="true">&raquo;</span></li>
             {% endif %}
-
         </ul>
     </nav>
 {% endif %}
 
+{#TODO: Fix edit form opening in the upper section if user is owner#}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Edit review functionality
@@ -245,8 +203,9 @@
                 const deleteReviewBtn = document.querySelector(`.delete-review-btn[data-review-id="${reviewId}"]`);
                 const editReviewForm = document.querySelector(`.edit-review-form[data-review-id="${reviewId}"]`);
 
+                // Hide Edit and Delete buttons, show form
                 editReviewBtn.classList.add("d-none");
-                deleteReviewBtn.classList.add("d-none"); // Hide Delete button while editing
+                if (deleteReviewBtn) deleteReviewBtn.classList.add("d-none");
                 editReviewForm.classList.remove("d-none");
             });
         });
@@ -260,9 +219,10 @@
                 const deleteReviewBtn = document.querySelector(`.delete-review-btn[data-review-id="${reviewId}"]`);
                 const editReviewForm = document.querySelector(`.edit-review-form[data-review-id="${reviewId}"]`);
 
+                // Hide form, show Edit and Delete buttons
                 editReviewForm.classList.add("d-none");
                 editReviewBtn.classList.remove("d-none");
-                deleteReviewBtn.classList.remove("d-none"); // Show Delete button after canceling
+                if (deleteReviewBtn) deleteReviewBtn.classList.remove("d-none");
             });
         });
 
@@ -287,15 +247,17 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Update the review content on the page
-                            const reviewContentP = editReviewForm.closest(".flex-grow-1").querySelectorAll("p")[1];
+                            // Update the review content
+                            const reviewCardBody = editReviewForm.closest(".card-body");
+                            const reviewContentP = reviewCardBody.querySelector(".review-content");
                             reviewContentP.innerText = formData.get("content");
+
                             // Hide the form and show the "Edit" and "Delete" buttons again
                             editReviewForm.classList.add("d-none");
                             const editReviewBtn = document.querySelector(`.edit-review-btn[data-review-id="${reviewId}"]`);
                             const deleteReviewBtn = document.querySelector(`.delete-review-btn[data-review-id="${reviewId}"]`);
                             editReviewBtn.classList.remove("d-none");
-                            deleteReviewBtn.classList.remove("d-none");
+                            if (deleteReviewBtn) deleteReviewBtn.classList.remove("d-none");
                         } else {
                             console.error('Error:', data.message);
                         }
@@ -331,8 +293,10 @@
                     .then(data => {
                         if (data.success) {
                             // Remove the review from the page
-                            const reviewElement = deleteReviewBtn.closest(".mb-4");
-                            reviewElement.remove();
+                            const reviewElement = deleteReviewBtn.closest(".card");
+                            if (reviewElement) {
+                                reviewElement.remove();
+                            }
                         } else {
                             console.error('Failed to delete review:', data.message);
                         }

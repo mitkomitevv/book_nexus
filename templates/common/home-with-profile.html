@@ -2,110 +2,554 @@
 {% load static %}
 
 {% block content %}
-<div class="container my-4">
+    <div class="container my-4">
 
-    <h2 class="mb-4">Recent Reviews by People You Follow</h2>
+        <h2 class="mb-4 text-center">Recent Reviews by People You Follow</h2>
 
-    {% if reviews %}
-        {% for review in reviews %}
-            <div class="card col-6 mb-4 p-3 shadow-sm mx-auto">
-                <div class="d-flex">
-                    <!-- User Picture -->
-                    <div class="me-3">
-                        <a href="{% url 'profile_details' review.user.pk %}">
-                            {% if review.user.profile.profile_picture %}
-                                <img src="{{ review.user.profile.profile_picture.url }}" alt="{{ review.user.full_name }}"
-                                     class="rounded-circle" width="60" height="60">
-                            {% else %}
-                                <img src="{% static 'images/stock_profile.png' %}" alt="Default Avatar" class="rounded-circle"
-                                     width="60" height="60">
-                            {% endif %}
-                        </a>
+        {% if reviews %}
+            {% for review in reviews %}
+                <div class="card col-7 mb-4 p-3 shadow-sm mx-auto">
+                    <div class="d-flex">
+                        <!-- User Picture -->
+                        <div class="me-3">
+                            <a href="{% url 'profile_details' review.user.pk %}">
+                                {% if review.user.profile.profile_picture %}
+                                    <img src="{{ review.user.profile.profile_picture.url }}"
+                                         alt="{{ review.user.full_name }}"
+                                         class="rounded-circle" width="60" height="60">
+                                {% else %}
+                                    <img src="{% static 'images/stock_profile.png' %}" alt="Default Avatar"
+                                         class="rounded-circle"
+                                         width="60" height="60">
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="flex-grow-1">
+                            <p class="mb-1">
+                                <strong><a href="{% url 'profile_details' review.user.pk %}"
+                                           class="text-decoration-none text-dark">{{ review.user.full_name }}</a></strong>
+                                reviewed
+                                <strong><a href="{% url 'book-details' review.book.pk %}"
+                                           class="text-decoration-none">{{ review.book.title }}</a></strong>
+                            </p>
+
+                            {% with review.user_rating as average_rating %}
+                                {% include 'books/book-star-rating.html' %}
+                            {% endwith %}
+
+                            <small class="text-muted">{{ review.created_at|date:"F d, Y" }}</small>
+
+                            <div id="summary-container-{{ review.pk }}" class="text-container mb-3"
+                                 data-full-text="{{ review.content|escapejs }}">
+                                <p id="review-text-{{ review.pk }}" class="d-inline"></p>
+                                <button id="toggle-summary-{{ review.pk }}"
+                                        class="btn btn-link p-0 text-decoration-none d-inline hidden">
+                                    More ▼
+                                </button>
+                            </div>
+
+                            <!-- Book Info Card -->
+                            <div class="d-flex align-items-start mt-3 p-2 border rounded">
+                                <div class="me-3">
+                                    <a href="{% url 'book-details' review.book.pk %}">
+                                        {% if review.book.cover %}
+                                            <img src="{{ review.book.cover.url }}" alt="{{ review.book.title }}"
+                                                 class="img-thumbnail"
+                                                 style="max-width: 140px; height: 200px; object-fit: cover;">
+                                        {% else %}
+                                            <img src="{% static 'images/default_cover.jpg' %}"
+                                                 alt="{{ review.book.title }}"
+                                                 class="img-thumbnail"
+                                                 style="max-width: 140px; height: 200px; object-fit: cover;">
+                                        {% endif %}
+                                    </a>
+                                </div>
+                                <div>
+                                    <a href="{% url 'book-details' review.book.pk %}" class="text-decoration-none">
+                                        <h4 class="mb-1 text-dark">{{ review.book.title }}</h4>
+                                    </a>
+                                    {% if review.book.authors.exists %}
+                                        <small class="d-inline">by</small>
+                                        {% for author in review.book.authors.all %}
+                                            <a href="{% url 'author-details' author.pk %}" class="text-decoration-none">
+                                                <h6 class="text-muted d-inline">
+                                                    {{ author.name }}{% if not forloop.last %}, {% endif %}</h6>
+                                            </a>
+                                        {% endfor %}
+                                    {% else %}
+                                        <p class="text-muted mb-1">by Unknown Author</p>
+                                    {% endif %}
+                                
+                                
+                                    <div>
+                                        <div class="mb-2 mt-2 d-inline">
+                                            {% include 'books/read-status-dropdown.html' with book=review.book %}
+                                        </div>
+
+                                        <div class="d-flex align-items-center mb-0">
+                                            {% if review.book.user_rating %}
+                                                <small class="text-muted ms-2">My rating: </small>
+                                            {% else %}
+                                                <small class="text-muted ms-2">Rate:</small>
+                                            {% endif %}
+                                            <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                                            <input id="input-{{ review.book.pk }}" name="rating" type="number"
+                                                   class="rating"
+                                                   data-size="xs" data-book-id="{{ review.book.pk }}"
+                                                   data-show-clear="true" data-show-caption="false"
+                                                   data-theme="krajee-fas"
+                                                   data-url="{% url 'rate-book' review.book.pk %}"
+                                                   value="{{ review.book.user_rating }}">
+                                        </div>
+                                    </div>
+
+                                
+                                    <p class="mt-2">{{ review.book.summary|truncatechars:170 }}</p>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
-                    <div class="flex-grow-1">
-                        <p class="mb-1">
-                            <strong><a href="{% url 'profile_details' review.user.pk %}" class="text-decoration-none text-dark">{{ review.user.full_name }}</a></strong> reviewed 
-                            <strong><a href="{% url 'book-details' review.book.pk %}" class="text-decoration-none">{{ review.book.title }}</a></strong>
-                        </p>
-                        <small class="text-muted">{{ review.created_at|date:"F d, Y" }}</small>
-
-                        <div class="mt-3 mb-3">
-                            <!-- A snippet of the review content -->
-                            <p class="mb-0">{{ review.content|truncatewords:50 }}</p>
-                        </div>
-
-                        <!-- Book Info Card -->
-                        <div class="d-flex align-items-start mt-3 p-2 border rounded">
-                            <div class="me-3">
-                                {% if review.book.cover %}
-                                    <img src="{{ review.book.cover.url }}" alt="{{ review.book.title }}"
-                                         class="img-thumbnail" style="width: 140px; height:200px; object-fit:cover;">
-                                {% else %}
-                                    <img src="{% static 'images/default_cover.jpg' %}" alt="{{ review.book.title }}"
-                                         class="img-thumbnail" style="width: 80px; height:120px; object-fit:cover;">
-                                {% endif %}
-                            </div>
-                            <div>
-                                <h5 class="mb-1">{{ review.book.title }}</h5>
-                                {% if review.book.authors.exists %}
-                                    <p class="text-muted mb-1">by {{ review.book.authors.first.name }}</p>
-                                {% else %}
-                                    <p class="text-muted mb-1">by Unknown Author</p>
-                                {% endif %}
-                                <a href="{% url 'book-details' review.book.pk %}" class="btn btn-outline-primary btn-sm mt-2">
-                                    View Book
-                                </a>
-                            </div>
-                        </div>
-
+                    <div class="comments-section mt-4">
+                        <button class="btn btn-link open-comments-modal" data-review-id="{{ review.pk }}">
+                            <span>Comments</span>
+                            <i class="fa-regular fa-comment ms-2"></i>
+                        </button>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
+            {% endfor %}
 
-        <!-- Pagination -->
-        {% if is_paginated %}
-            <nav aria-label="Review pagination" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    {% if page_obj.has_previous %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page=1" aria-label="First">&laquo;</a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">&lsaquo;</a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
-                        <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
-                    {% endif %}
-
-                    {% for num in page_obj.paginator.page_range %}
-                        {% if num == page_obj.number %}
-                            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
-                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
-                        {% elif num == 1 or num == page_obj.paginator.num_pages %}
-                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <nav aria-label="Review pagination" class="mt-4">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1" aria-label="First">&laquo;</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}"
+                                   aria-label="Previous">&lsaquo;</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                            <li class="page-item disabled"><span class="page-link">&lsaquo;</span></li>
                         {% endif %}
-                    {% endfor %}
 
-                    {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">&rsaquo;</a>
-                        </li>
-                        <li class="page-item">
-                            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">&raquo;</a>
-                        </li>
-                    {% else %}
-                        <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
-                        <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
-                    {% endif %}
-                </ul>
-            </nav>
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if num == page_obj.number %}
+                                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                            {% elif num == 1 or num == page_obj.paginator.num_pages %}
+                                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">&rsaquo;</a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">&raquo;</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">&rsaquo;</span></li>
+                            <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% endif %}
+        {% else %}
+            <p>You are not following anyone yet. Start following other readers to see their reviews here.</p>
         {% endif %}
-    {% else %}
-        <p>You are not following anyone yet. Start following other readers to see their reviews here.</p>
-    {% endif %}
 
-</div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Handle opening the comments modal
+            document.querySelectorAll(".open-comments-modal").forEach(button => {
+                button.addEventListener("click", function () {
+                    const reviewId = button.dataset.reviewId;
+                    loadCommentsModal(reviewId);
+                });
+            });
+
+            function loadCommentsModal(reviewId) {
+                fetch(`/books/review-comments/${reviewId}/`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        // Insert the modal HTML into the page
+                        document.body.insertAdjacentHTML('beforeend', data.html);
+                        // Show the modal
+                        const modalElement = document.getElementById('comments-modal');
+                        const modal = new bootstrap.Modal(modalElement);
+                        modal.show();
+
+                        // Initialize currentPage to 1 when modal is first opened
+                        modalElement.dataset.currentPage = '1';
+
+                        // Attach event listeners
+                        attachModalEventListeners(reviewId);
+
+                        // Remove the modal from DOM when hidden to prevent duplicates
+                        modalElement.addEventListener('hidden.bs.modal', function () {
+                            modalElement.remove();
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                    });
+            }
+
+            function attachModalEventListeners(reviewId) {
+                const modalElement = document.getElementById('comments-modal');
+
+                // Handle pagination links inside the modal
+                document.querySelectorAll('#comments-modal .pagination a').forEach(link => {
+                    link.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const page = this.getAttribute('data-page');
+                        // Update currentPage data attribute on the modal
+                        modalElement.dataset.currentPage = page;
+                        loadModalContent(reviewId, page);
+                    });
+                });
+
+                // Handle adding a new comment inside the modal
+                const form = document.getElementById('modal-add-comment-form');
+                if (form) {
+                    form.addEventListener('submit', function (e) {
+                        e.preventDefault();
+                        const formData = new FormData(form);
+                        const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+
+                        fetch(`/books/add-comment/${reviewId}/`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                            body: formData
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    // Get currentPage from modal's data attribute
+                                    const currentPage = modalElement.dataset.currentPage || '1';
+                                    // Reload modal content to include the new comment
+                                    loadModalContent(reviewId, currentPage);
+                                } else {
+                                    alert('Error adding comment.');
+                                }
+                            });
+                    });
+                }
+
+                // Handle delete comment inside the modal
+                document.querySelectorAll('#comments-modal .delete-comment-btn').forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const commentId = button.dataset.commentId;
+                        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                        fetch(`/books/delete-comment/${commentId}/`, {
+                            method: 'POST',  // Using POST as DELETE might be blocked by some servers
+                            headers: {
+                                'X-CSRFToken': csrfToken,
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    // Reload modal content to reflect the deleted comment
+                                    const currentPage = modalElement.dataset.currentPage || '1';
+                                    loadModalContent(reviewId, currentPage);
+                                } else {
+                                    alert('Error deleting comment.');
+                                }
+                            });
+                    });
+                });
+
+                // Handle edit comment inside the modal
+                document.querySelectorAll('#comments-modal .edit-comment-btn').forEach(button => {
+                    button.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const commentId = button.dataset.commentId;
+                        const commentContent = document.querySelector(`#comment-content-${commentId}`);
+
+                        // Save the original content in a data attribute for later use
+                        commentContent.dataset.originalContent = commentContent.innerText;
+
+                        // Replace comment content with an editable textarea
+                        commentContent.innerHTML = `
+                        <textarea class="form-control edit-comment-textarea" name="content">${commentContent.innerText}</textarea>
+                        <button class="btn btn-primary btn-sm save-edit-comment-btn mt-2" data-comment-id="${commentId}">Save</button>
+                        <button class="btn btn-secondary btn-sm cancel-edit-comment-btn mt-2" data-comment-id="${commentId}">Cancel</button>
+                    `;
+
+                        // Attach event listeners for save and cancel buttons
+                        document.querySelector(`#comment-content-${commentId} .save-edit-comment-btn`).addEventListener('click', function () {
+                            const updatedContent = document.querySelector(`#comment-content-${commentId} .edit-comment-textarea`).value;
+                            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                            // Create a FormData object and append the updated content
+                            const formData = new FormData();
+                            formData.append('content', updatedContent);
+                            formData.append('csrfmiddlewaretoken', csrfToken); // Include the CSRF token in the form data
+
+                            fetch(`/books/edit-comment/${commentId}/`, {
+                                method: 'POST',
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    // Do not set 'Content-Type' header; the browser will set it automatically
+                                },
+                                body: formData,
+                            })
+                                .then(response => {
+                                    if (!response.ok) {
+                                        return response.json().then(data => {
+                                            throw data;
+                                        });
+                                    }
+                                    return response.json();
+                                })
+                                .then(data => {
+                                    if (data.success) {
+                                        // Update the comment content with the new value
+                                        commentContent.innerHTML = `<p>${data.content}</p>`;
+                                    } else {
+                                        alert('Error updating comment.');
+                                    }
+                                })
+                                .catch(errorData => {
+                                    if (errorData.errors) {
+                                        // Handle form validation errors
+                                        let errorMessages = '';
+                                        for (const field in errorData.errors) {
+                                            errorData.errors[field].forEach(error => {
+                                                errorMessages += `${field}: ${error.message}\n`;
+                                            });
+                                        }
+                                        alert('Error editing comment:\n' + errorMessages);
+                                    } else {
+                                        alert('An unexpected error occurred.');
+                                    }
+                                });
+                        });
+
+                        document.querySelector(`#comment-content-${commentId} .cancel-edit-comment-btn`).addEventListener('click', function () {
+                            // Revert back to original content without saving changes
+                            commentContent.innerHTML = `<p>${commentContent.dataset.originalContent}</p>`;
+                        });
+                    });
+                });
+            }
+
+            function loadModalContent(reviewId, page = 1) {
+                fetch(`/books/review-comments/${reviewId}/?page=${page}`, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        // Instead of replacing entire modal content, update specific sections
+                        const commentsContainer = document.querySelector('#comments-modal .modal-body');
+
+                        // Create a temporary div to parse the HTML
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = data.html;
+
+                        // Update comments list
+                        const newCommentsList = tempDiv.querySelector('.modal-body').innerHTML;
+                        commentsContainer.innerHTML = newCommentsList;
+
+                        // Re-attach event listeners after content update
+                        attachModalEventListeners(reviewId);
+                    })
+                    .catch(error => {
+                        console.error('Error loading modal content:', error);
+                    });
+            }
+        });
+    </script>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Loop through all summary containers
+            document.querySelectorAll('[id^="summary-container-"]').forEach(function (container) {
+                const reviewId = container.id.split('-')[2]; // Extract the review ID from the container's ID
+                const fullText = container.dataset.fullText; // Use a data attribute to pass the full text
+                const wordLimit = 30;
+
+                const summaryText = document.getElementById(`review-text-${reviewId}`);
+                const toggleSummary = document.getElementById(`toggle-summary-${reviewId}`);
+
+                // Check for valid elements
+                if (!summaryText || !toggleSummary || !fullText) {
+                    console.error(`Missing elements for review ${reviewId}`);
+                    return;
+                }
+
+                const words = fullText.trim().split(/\s+/);
+                const truncatedText = words.slice(0, wordLimit).join(" ") + (words.length > wordLimit ? "..." : "");
+                summaryText.textContent = truncatedText;
+
+                if (words.length > wordLimit) {
+                    toggleSummary.classList.remove('hidden'); // Show the button
+                } else {
+                    toggleSummary.classList.add('hidden'); // Hide the button
+                }
+
+                let isExpanded = false;
+
+                toggleSummary.addEventListener("click", function (event) {
+                    event.preventDefault();
+
+                    if (isExpanded) {
+                        summaryText.textContent = truncatedText;
+                        toggleSummary.textContent = "More ▼";
+                    } else {
+                        summaryText.textContent = fullText;
+                        toggleSummary.textContent = "Less ▲";
+                    }
+
+                    isExpanded = !isExpanded;
+                });
+            });
+        });
+    </script>
+
+    <script>
+        // Initialize reading list handlers only once when document is ready
+        $(document).ready(function () {
+            // Use event delegation to handle all reading list actions
+            $(document).on('click', '.reading-list-dropdown .dropdown-item', function (e) {
+                e.preventDefault();
+
+                const dropdownContainer = $(this).closest('.reading-list-dropdown');
+                const bookId = dropdownContainer.data('book-id');
+                const action = $(this).data('action');
+                const listType = $(this).data('list-type');
+                const dropdownButton = dropdownContainer.find('.dropdown-toggle');
+                const csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+
+                const url = action === 'add'
+                    ? '{% url "add-to-reading-list" %}'
+                    : '{% url "remove-from-reading-list" %}';
+
+                const data = action === 'add'
+                    ? {book_id: bookId, list_type: listType}
+                    : {book_id: bookId};
+
+                $.ajax({
+                    url: url,
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': csrfToken
+                    },
+                    data: data,
+                    success: function (response) {
+                        if (response.success) {
+                            if (action === 'add') {
+                                // Update button text based on list type
+                                const buttonText = {
+                                    'want_to_read': 'Want to Read',
+                                    'currently_reading': 'Currently Reading',
+                                    'read': 'Read',
+                                    'favorites': 'Favorites'
+                                }[listType];
+                                dropdownButton.text(buttonText);
+                            } else {
+                                dropdownButton.text('Add to List');
+                            }
+                        } else {
+                            console.error(`Failed to ${action} list: ${response.message}`);
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        alert(`Failed to ${action} reading list`);
+                    }
+                });
+            });
+        });
+    </script>
+    
+    <script>
+        $(document).ready(function () {
+            // Initialize star rating for all rating inputs
+            $(".rating").each(function () {
+                var $ratingInput = $(this);
+                var ratingUrl = $ratingInput.data('url');  // Get the URL to submit the rating
+                var ratingValue = $ratingInput.val();  // Get the initial rating value for display
+
+                // Initialize the Krajee star rating plugin
+                $ratingInput.rating({
+                    theme: 'krajee-fas',
+                    filledStar: '<i class="fas fa-star"></i>',
+                    emptyStar: '<i class="far fa-star"></i>',
+                    showCaption: false,  // Hide caption below stars
+                    showClear: true,  // Enable clear button
+                    step: 0.5,  // Allow half-star ratings
+                    value: ratingValue  // Set initial value
+                }).on('rating:change', function (event, value) {
+                    // Fetch CSRF token for secure requests
+                    var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+
+                    // Make AJAX POST request to save the rating
+                    $.ajax({
+                        url: ratingUrl,
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        data: {
+                            rating: value
+                        },
+                        success: function (response) {
+                            if (!response.success) {
+                                console.error('Failed to submit rating: ' + response.message);
+                            }
+                        },
+                        error: function () {
+                            console.error('Failed to submit rating');
+                        }
+                    });
+                }).on('rating:clear', function (event) {
+                    // Handle clearing the rating
+                    var csrfToken = $('input[name="csrfmiddlewaretoken"]').val();
+
+                    $.ajax({
+                        url: ratingUrl,
+                        method: 'DELETE',  // Changed method to DELETE to represent removing the rating
+                        headers: {
+                            'X-CSRFToken': csrfToken
+                        },
+                        success: function (response) {
+                            if (!response.success) {
+                                console.error('Failed to clear rating: ' + response.message);
+                            }
+                        },
+                        error: function () {
+                            console.error('Failed to clear rating');
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+
 {% endblock %}

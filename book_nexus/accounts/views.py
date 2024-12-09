@@ -4,11 +4,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView
+from django.db.models import Avg
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
-from django.views.generic import CreateView, DetailView, UpdateView
+from django.views.generic import CreateView, DetailView, UpdateView, ListView
 from book_nexus.accounts.forms import CustomUserCreationForm, ProfileEditForm
 from book_nexus.accounts.models import Profile, Follow
+from book_nexus.books.mixins import BookQuerysetMixin
+from book_nexus.books.models import Book, Rating
+from book_nexus.reading_list.mixins import UserReadingListMixin
 from book_nexus.reading_list.models import WantToRead, CurrentlyReading, Read, Favorites
 
 UserModel = get_user_model()
@@ -40,14 +44,14 @@ class UserDetailsView(LoginRequiredMixin, DetailView):
         else:
             context['age'] = None
 
-        print([context['age']])
+        context['read_books'] = Read.objects.filter(user=user)
+        context['want_to_read_books'] = WantToRead.objects.filter(user=user)
+        context['currently_reading_books'] = CurrentlyReading.objects.filter(user=user)
+        context['favorites_books'] = Favorites.objects.filter(user=user)
 
-        context['want_to_read_count'] = WantToRead.objects.filter(user=user).count()
-        context['currently_reading_count'] = CurrentlyReading.objects.filter(user=user).count()
-        context['read_count'] = Read.objects.filter(user=user).count()
-        context['favorites_count'] = Favorites.objects.filter(user=user).count()
-
-        context['favorites'] = Favorites.objects.filter(user=user).all()
+        context['ratings_count'] = user.ratings.all().count()
+        context['avg_ratings'] = user.ratings.aggregate(Avg('rating'))['rating__avg']
+        context['reviews_count'] = user.review_set.all().count()
 
         return context
 
@@ -87,3 +91,33 @@ def unfollow_user(request, user_pk):
     followed_user = get_object_or_404(UserModel, pk=user_pk)
     Follow.objects.filter(follower=request.user, followed_user=followed_user).delete()
     return redirect('profile_details', pk=user_pk)
+
+
+class UserReadingListView(BookQuerysetMixin, UserReadingListMixin, ListView):
+    model = Book
+    template_name = 'books/book-list.html'
+    context_object_name = 'books'
+    paginate_by = 10
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        user = get_object_or_404(UserModel, pk=self.kwargs['pk'])
+        list_type = self.request.GET.get('list', 'read')
+
+        if list_type == 'want-to-read':
+            queryset = queryset.filter(pk__in=WantToRead.objects.filter(user=user).values_list('book_id', flat=True))
+        elif list_type == 'currently-reading':
+            queryset = queryset.filter(pk__in=CurrentlyReading.objects.filter(user=user).values_list('book_id', flat=True))
+        elif list_type == 'favorites':
+            queryset = queryset.filter(pk__in=Favorites.objects.filter(user=user).values_list('book_id', flat=True))
+        else:
+            queryset = queryset.filter(pk__in=Read.objects.filter(user=user).values_list('book_id', flat=True))
+
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['list_type'] = ' '.join(self.request.GET.get('list', 'read').split('-'))
+        context['user_data'] = get_object_or_404(UserModel, pk=self.kwargs['pk'])
+        return context

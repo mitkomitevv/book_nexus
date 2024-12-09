@@ -3,16 +3,27 @@
 {% load static %}
 
 {% block content %}
-    <a href="{% url 'create-book' %}">Add Book</a>
-    <a href="{% url 'author-create' %}">Add Author</a>
-
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-7">
-                {% if query %}
-                    <h2 class="mb-4">Your search results for "{{ query }}"</h2>
+
+                {% if source_view == 'BookSearchView' %}
+                    {% if books %}
+                        <h2 class="mb-4 mt-4">Your search results for "{{ query }}"</h2>
+                    {% else %}
+                        <div class="text-center">
+                            <h2 class="mb-4 mt-4">No results found for "{{ query }}". Try a different search.</h2>
+                            <img src="{% static 'images/book.png' %}" alt="book img" class="img-fluid">
+                        </div>
+                    {% endif %}
+                {% elif source_view == 'BookListView' %}
+                    <h2 class="mb-4 mt-4">All Books</h2>
+                {% elif source_view == 'ShowAuthorBooksView' %}
+                    <h2 class="mb-4 mt-4">{{ author.name }}'s books</h2>
+                {% elif source_view == 'UserReadingListView' %}
+                    <h2 class="mb-4 mt-4">{{ user_data.full_name }}'s {{ list_type }} shelf</h2>
                 {% else %}
-                    <h2 class="mb-4">All Books</h2>
+                    <h2 class="mb-4 mt-4">Default Header</h2>
                 {% endif %}
 
                 {% for book in books %}
@@ -23,7 +34,7 @@
                                 <a href="{% url 'book-details' book.pk %}">
                                     {% if book.cover %}
                                         <img src="{{ book.cover.url }}" alt="{{ book.title }}"
-                                             class="img-fluid rounded cover-image">
+                                             class="img.img-fluid rounded cover-image">
                                     {% else %}
                                         <img src="{% static 'images/default_cover.jpg' %}" alt="{{ book.title }}"
                                              class="img-fluid rounded cover-image">
@@ -38,7 +49,8 @@
                                             <h5 class="text-muted fw-bold">{{ book.title }}</h5>
                                         </a>
                                         {% if book.series_books.exists %}
-                                            <a href="{% url 'series-detail' book.series_books.first.series.pk %}" class="text-decoration-none ms-2">
+                                            <a href="{% url 'series-detail' book.series_books.first.series.pk %}"
+                                               class="text-decoration-none ms-2">
                                                 <h5 class="text-muted">
                                                     {% with book.series_books.first as series_book %}
                                                         ({{ series_book.series.name }}, #{{ series_book.number }})
@@ -48,7 +60,7 @@
                                         {% endif %}
                                     </div>
 
-                                    <!-- Author(s) --> 
+                                    <!-- Author(s) -->
                                     <p class="card-text">
                                         <small class="text-muted">by</small>
                                         {% for author in book.authors.all %}

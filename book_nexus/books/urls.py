@@ -4,7 +4,7 @@ from book_nexus.books.views import BookCreateView, BookListView, BookDetailsView
     ReviewCommentsModalView, DeleteCommentView, EditCommentView, BookSearchView, SeriesDetailView
 
 urlpatterns = [
-    path('show-books/', BookListView.as_view(), name='show-all-books'),
+    path('show-all-books/', BookListView.as_view(), name='show-all-books'),
     path('create/', BookCreateView.as_view(), name='create-book'),
     path('<int:pk>/', include([
         path('details/', BookDetailsView.as_view(), name='book-details'),
