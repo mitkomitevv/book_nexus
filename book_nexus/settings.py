@@ -115,8 +115,6 @@ TEMPLATES = [
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                # TODO: This doesn't feel right. Find a better way if there is enough time
-                'book_nexus.books.context_processors.source_view_processor',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
             ],

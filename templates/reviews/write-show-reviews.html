@@ -14,21 +14,51 @@
                     <small class="text-muted">{{ user_review.created_at|date:"F d, Y H:i" }}</small>
                 {% endif %}
                 <div class="mt-2">
-                    <!-- Use same classes and data attributes as bottom reviews -->
                     <button class="btn btn-primary edit-review-btn" data-review-id="{{ user_review.pk }}">
                         Edit Review
                     </button>
-                    <button class="btn btn-danger delete-review-btn" data-review-id="{{ user_review.pk }}">
+                    <!-- Trigger the modal for confirmation -->
+                    <button class="btn btn-danger delete-review-btn" data-review-id="{{ user_review.pk }}"
+                            data-bs-toggle="modal" data-bs-target="#deleteReviewModal{{ user_review.pk }}">
                         Delete Review
                     </button>
 
-                    <!-- Edit form for top review -->
+                    <!-- Delete Confirmation Modal -->
+                    <div class="modal fade" id="deleteReviewModal{{ user_review.pk }}" tabindex="-1"
+                         aria-labelledby="deleteReviewModalLabel{{ user_review.pk }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="deleteReviewModalLabel{{ user_review.pk }}">Confirm
+                                        Deletion</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                            aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    Are you sure you want to delete this review?
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                        Cancel
+                                    </button>
+                                    <!-- The confirm delete button triggers the AJAX request -->
+                                    <button type="button" class="btn btn-danger confirm-delete-review-btn"
+                                            data-review-id="{{ user_review.pk }}">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Edit form for the top review -->
                     <form class="edit-review-form d-none mt-3" data-review-id="{{ user_review.pk }}"
                           action="{% url 'edit-review' user_review.pk %}" method="post">
                         {% csrf_token %}
                         <textarea name="content" rows="4" class="form-control">{{ user_review.content }}</textarea>
                         <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
-                        <button type="button" class="btn btn-secondary mt-2 cancel-edit-btn" data-review-id="{{ user_review.pk }}">
+                        <button type="button" class="btn btn-secondary mt-2 cancel-edit-btn"
+                                data-review-id="{{ user_review.pk }}">
                             Cancel
                         </button>
                     </form>
@@ -95,7 +125,8 @@
 
                 <!-- Review Date -->
                 {% if review_data.review.created_at|dates_different:review_data.review.updated_at %}
-                    <small class="text-muted">Last updated: {{ review_data.review.updated_at|date:"F d, Y H:i" }}</small>
+                    <small class="text-muted">Last
+                        updated: {{ review_data.review.updated_at|date:"F d, Y H:i" }}</small>
                 {% else %}
                     <small class="text-muted">{{ review_data.review.created_at|date:"F d, Y H:i" }}</small>
                 {% endif %}
@@ -108,21 +139,49 @@
                     </button>
                 </div>
 
-                {% if comment.user == user or user.is_superuser or user|has_group:'Moderators' %}
+                {% if user.is_superuser or user|has_group:'Librarians' or review_data.review.user == user %}
                     <hr>
                     <div class="mt-3">
                         <button class="btn btn-primary edit-review-btn" data-review-id="{{ review_data.review.pk }}">
                             Edit Review
                         </button>
-                        <button class="btn btn-danger delete-review-btn" data-review-id="{{ review_data.review.pk }}">
+                        <!-- Trigger the modal for confirmation -->
+                        <button class="btn btn-danger delete-review-btn" data-review-id="{{ review_data.review.pk }}"
+                                data-bs-toggle="modal" data-bs-target="#deleteReviewModal{{ review_data.review.pk }}">
                             Delete Review
                         </button>
+
+                        <!-- Delete Confirmation Modal for Each Review -->
+                        <div class="modal fade" id="deleteReviewModal{{ review_data.review.pk }}" tabindex="-1"
+                             aria-labelledby="deleteReviewModalLabel{{ review_data.review.pk }}" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="deleteReviewModalLabel{{ review_data.review.pk }}">
+                                            Confirm Deletion</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                                aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        Are you sure you want to delete this review for "{{ book.title }}"?
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel
+                                        </button>
+                                        <button type="button" class="btn btn-danger confirm-delete-review-btn"
+                                                data-review-id="{{ review_data.review.pk }}">Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         <!-- Edit Review Form -->
                         <form class="edit-review-form d-none mt-3" data-review-id="{{ review_data.review.pk }}"
                               action="{% url 'edit-review' review_data.review.pk %}" method="post">
                             {% csrf_token %}
-                            <textarea name="content" rows="4" class="form-control">{{ review_data.review.content }}</textarea>
+                            <textarea name="content" rows="4"
+                                      class="form-control">{{ review_data.review.content }}</textarea>
                             <button type="submit" class="btn btn-primary mt-2">Save Changes</button>
                             <button type="button" class="btn btn-secondary mt-2 cancel-edit-btn"
                                     data-review-id="{{ review_data.review.pk }}">Cancel
@@ -130,7 +189,6 @@
                         </form>
                     </div>
                 {% endif %}
-                
             </div>
         </div>
     </div>
@@ -152,7 +210,8 @@
 
             {% if paginated_reviews.has_previous %}
                 <li class="page-item">
-                    <a class="page-link" href="?page={{ paginated_reviews.previous_page_number }}" aria-label="Previous">&lsaquo;</a>
+                    <a class="page-link" href="?page={{ paginated_reviews.previous_page_number }}"
+                       aria-label="Previous">&lsaquo;</a>
                 </li>
             {% else %}
                 <li class="page-item disabled"><span class="page-link" aria-hidden="true">&lsaquo;</span></li>
@@ -192,7 +251,6 @@
     </nav>
 {% endif %}
 
-{#TODO: Fix edit form opening in the upper section if user is owner#}
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Edit review functionality
@@ -230,7 +288,7 @@
         const editReviewForms = document.querySelectorAll(".edit-review-form");
         editReviewForms.forEach(function (editReviewForm) {
             editReviewForm.addEventListener("submit", function (e) {
-                e.preventDefault();  // Prevent the form from submitting normally
+                e.preventDefault();  // Prevent normal form submission
 
                 const reviewId = editReviewForm.dataset.reviewId;
                 const url = editReviewForm.action;
@@ -268,19 +326,12 @@
             });
         });
 
-        // Delete review functionality
-        const deleteReviewButtons = document.querySelectorAll(".delete-review-btn");
-        deleteReviewButtons.forEach(function (deleteReviewBtn) {
-            deleteReviewBtn.addEventListener("click", function (e) {
-                e.preventDefault();
-
-                const reviewId = deleteReviewBtn.dataset.reviewId;
+        // Handle Review Deletion via the Confirmation Modal
+        const confirmDeleteReviewButtons = document.querySelectorAll(".confirm-delete-review-btn");
+        confirmDeleteReviewButtons.forEach(function (confirmDeleteBtn) {
+            confirmDeleteBtn.addEventListener("click", function () {
+                const reviewId = confirmDeleteBtn.dataset.reviewId;
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-                if (!reviewId) {
-                    console.error('Review ID is missing');
-                    return;
-                }
 
                 fetch(`/books/delete-review/${reviewId}/`, {
                     method: 'POST',
@@ -292,11 +343,8 @@
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            // Remove the review from the page
-                            const reviewElement = deleteReviewBtn.closest(".card");
-                            if (reviewElement) {
-                                reviewElement.remove();
-                            }
+                            // Instead of removing from DOM, just reload the page
+                            window.location.reload();
                         } else {
                             console.error('Failed to delete review:', data.message);
                         }
@@ -309,7 +357,6 @@
     });
 </script>
 
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // Handle opening the comments modal
@@ -320,8 +367,8 @@
             });
         });
 
-        function loadCommentsModal(reviewId) {
-            fetch(`/books/review-comments/${reviewId}/`, {
+        function loadCommentsModal(reviewId, page=1) {
+            fetch(`/books/review-comments/${reviewId}/?page=${page}`, {
                 headers: {
                     'X-Requested-With': 'XMLHttpRequest',
                 },
@@ -341,8 +388,8 @@
                     modal.show();
 
                     // Initialize currentPage to 1 when modal is first opened
-                    modalElement.dataset.currentPage = '1';
-
+                    modalElement.dataset.currentPage = page.toString();
+                    
                     // Attach event listeners
                     attachModalEventListeners(reviewId);
 
@@ -358,19 +405,61 @@
 
         function attachModalEventListeners(reviewId) {
             const modalElement = document.getElementById('comments-modal');
+            const currentPage = modalElement.dataset.currentPage || '1';
 
-            // Handle pagination links inside the modal
+            document.querySelectorAll('#comments-modal .confirm-delete-comment-btn').forEach(button => {
+                button.addEventListener('click', function () {
+                    const commentId = button.dataset.commentId;
+                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                    fetch(`/books/delete-comment/${commentId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json'
+                        },
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const commentModalElement = document.getElementById(`deleteCommentModal${commentId}`);
+
+                                // Hide the deletion confirmation modal
+                                if (commentModalElement) {
+                                    const commentDeleteModal = bootstrap.Modal.getInstance(commentModalElement) || new bootstrap.Modal(commentModalElement);
+                                    commentDeleteModal.hide();
+                                }
+
+                                // Remove any existing comments modal
+                                const existingModal = document.getElementById('comments-modal');
+                                if (existingModal) {
+                                    existingModal.remove();
+                                }
+
+                                // Reopen the comments modal with updated content
+                                loadCommentsModal(reviewId, currentPage);
+                            } else {
+                                alert('Error deleting comment: ' + data.message);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error deleting comment:', error);
+                        });
+                });
+            });
+
+            // Pagination links inside the modal
             document.querySelectorAll('#comments-modal .pagination a').forEach(link => {
                 link.addEventListener('click', function (e) {
                     e.preventDefault();
                     const page = this.getAttribute('data-page');
-                    // Update currentPage data attribute on the modal
                     modalElement.dataset.currentPage = page;
                     loadModalContent(reviewId, page);
                 });
             });
 
-            // Handle adding a new comment inside the modal
+            // Add comment inside the modal
             const form = document.getElementById('modal-add-comment-form');
             if (form) {
                 form.addEventListener('submit', function (e) {
@@ -389,9 +478,7 @@
                         .then(response => response.json())
                         .then(data => {
                             if (data.success) {
-                                // Get currentPage from modal's data attribute
                                 const currentPage = modalElement.dataset.currentPage || '1';
-                                // Reload modal content to include the new comment
                                 loadModalContent(reviewId, currentPage);
                             } else {
                                 alert('Error adding comment.');
@@ -400,34 +487,7 @@
                 });
             }
 
-            // Handle delete comment inside the modal
-            document.querySelectorAll('#comments-modal .delete-comment-btn').forEach(button => {
-                button.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const commentId = button.dataset.commentId;
-                    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
-                    fetch(`/books/delete-comment/${commentId}/`, {
-                        method: 'POST',  // Using POST as DELETE might be blocked by some servers
-                        headers: {
-                            'X-CSRFToken': csrfToken,
-                            'X-Requested-With': 'XMLHttpRequest',
-                        },
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // Reload modal content to reflect the deleted comment
-                                const currentPage = modalElement.dataset.currentPage || '1';
-                                loadModalContent(reviewId, currentPage);
-                            } else {
-                                alert('Error deleting comment.');
-                            }
-                        });
-                });
-            });
-
-            // Handle edit comment inside the modal
+            // Edit comment logic remains unchanged
             document.querySelectorAll('#comments-modal .edit-comment-btn').forEach(button => {
                 button.addEventListener('click', function (e) {
                     e.preventDefault();
@@ -437,28 +497,24 @@
                     // Save the original content in a data attribute for later use
                     commentContent.dataset.originalContent = commentContent.innerText;
 
-                    // Replace comment content with an editable textarea
                     commentContent.innerHTML = `
-                        <textarea class="form-control edit-comment-textarea" name="content">${commentContent.innerText}</textarea>
-                        <button class="btn btn-primary btn-sm save-edit-comment-btn mt-2" data-comment-id="${commentId}">Save</button>
-                        <button class="btn btn-secondary btn-sm cancel-edit-comment-btn mt-2" data-comment-id="${commentId}">Cancel</button>
-                    `;
+                    <textarea class="form-control edit-comment-textarea" name="content">${commentContent.innerText}</textarea>
+                    <button class="btn btn-primary btn-sm save-edit-comment-btn mt-2" data-comment-id="${commentId}">Save</button>
+                    <button class="btn btn-secondary btn-sm cancel-edit-comment-btn mt-2" data-comment-id="${commentId}">Cancel</button>
+                `;
 
-                    // Attach event listeners for save and cancel buttons
                     document.querySelector(`#comment-content-${commentId} .save-edit-comment-btn`).addEventListener('click', function () {
                         const updatedContent = document.querySelector(`#comment-content-${commentId} .edit-comment-textarea`).value;
                         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-                        // Create a FormData object and append the updated content
                         const formData = new FormData();
                         formData.append('content', updatedContent);
-                        formData.append('csrfmiddlewaretoken', csrfToken); // Include the CSRF token in the form data
+                        formData.append('csrfmiddlewaretoken', csrfToken);
 
                         fetch(`/books/edit-comment/${commentId}/`, {
                             method: 'POST',
                             headers: {
                                 'X-Requested-With': 'XMLHttpRequest',
-                                // Do not set 'Content-Type' header; the browser will set it automatically
                             },
                             body: formData,
                         })
@@ -472,7 +528,6 @@
                             })
                             .then(data => {
                                 if (data.success) {
-                                    // Update the comment content with the new value
                                     commentContent.innerHTML = `<p>${data.content}</p>`;
                                 } else {
                                     alert('Error updating comment.');
@@ -480,7 +535,6 @@
                             })
                             .catch(errorData => {
                                 if (errorData.errors) {
-                                    // Handle form validation errors
                                     let errorMessages = '';
                                     for (const field in errorData.errors) {
                                         errorData.errors[field].forEach(error => {
@@ -495,7 +549,6 @@
                     });
 
                     document.querySelector(`#comment-content-${commentId} .cancel-edit-comment-btn`).addEventListener('click', function () {
-                        // Revert back to original content without saving changes
                         commentContent.innerHTML = `<p>${commentContent.dataset.originalContent}</p>`;
                     });
                 });
@@ -510,18 +563,12 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    // Instead of replacing entire modal content, update specific sections
                     const commentsContainer = document.querySelector('#comments-modal .modal-body');
-
-                    // Create a temporary div to parse the HTML
                     const tempDiv = document.createElement('div');
                     tempDiv.innerHTML = data.html;
 
-                    // Update comments list
-                    const newCommentsList = tempDiv.querySelector('.modal-body').innerHTML;
-                    commentsContainer.innerHTML = newCommentsList;
+                    commentsContainer.innerHTML = tempDiv.querySelector('.modal-body').innerHTML;
 
-                    // Re-attach event listeners after content update
                     attachModalEventListeners(reviewId);
                 })
                 .catch(error => {

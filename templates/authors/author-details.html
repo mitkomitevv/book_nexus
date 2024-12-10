@@ -1,4 +1,5 @@
 {% extends 'common/base.html' %}
+{% load user_extras %}
 {% load static %}
 
 {% block content %}
@@ -7,13 +8,52 @@
             <!-- Author Photo and Statistics -->
             <div class="col-md-4 text-center">
                 <img src=" 
+                        
                         {% if author.picture %}{{ author.picture.url }}{% else %}{% static 'images/stock_profile.png' %}{% endif %}"
                      alt="{{ author.name }}" class="img-fluid rounded-circle mb-4 shadow">
 
-                <div class="mt-1 mb-1">
-                    <a href="{% url 'author-edit' author.pk %}" class="btn btn-primary">Edit Author</a>
+                {% if user.is_authenticated %}
+                    {% if user.is_superuser or user|has_group:'Librarians' %}
+                        <div class="d-flex justify-content-center gap-2 mt-0">
+                            <a href="{% url 'author-edit' author.pk %}"
+                               class="btn btn-primary col-4 btn-sm"
+                               role="button">Edit Author</a>
+                            <button type="button"
+                                    class="btn btn-danger col-4 btn-sm"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#deleteAuthorModal{{ author.pk }}">Delete Author
+                            </button>
+                        </div>
+                    {% endif %}
+                {% endif %}
+
+                <!-- Delete Confirmation Modal -->
+                <div class="modal fade" id="deleteAuthorModal{{ author.pk }}" tabindex="-1"
+                     aria-labelledby="deleteAuthorModalLabel{{ author.pk }}" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="deleteAuthorModalLabel{{ author.pk }}">Confirm Deletion</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                        aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                Are you sure you want to delete "{{ author.name }}"?
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                    Cancel
+                                </button>
+                                <form method="post" action="{% url 'author-delete' author.pk %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger">Delete</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            
+
+
                 <div class="author-stats bg-light p-3 rounded shadow-sm">
                     <h4 class="text-primary mb-3">{{ author.name }}</h4>
                     {% if author.bio %}
@@ -50,13 +90,13 @@
                             </div>
                         {% endfor %}
                     </div>
+                    <div class="mt-4 d-flex justify-content-end">
+                        <a href="{% url 'author-show-books' author.pk %}" class="btn btn-primary">
+                            See all {{ author.name }}'s books
+                        </a>
+                    </div>
                 </div>
 
-                <div class="mt-4 d-flex justify-content-end">
-                    <a href="{% url 'author-show-books' author.pk %}" class="btn btn-primary">
-                        See all {{ author.name }}'s books
-                    </a>
-                </div>
             </div>
         </div>
 

@@ -3,6 +3,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate
+from django.forms import PasswordInput
+from django.forms.widgets import EmailInput
 
 from book_nexus.accounts.models import Profile
 
@@ -12,23 +14,79 @@ class CustomUserBaseForm(UserCreationForm):
     class Meta(UserCreationForm.Meta):
         model = UserModel
         fields = ['full_name', 'email', 'password1', 'password2']
+        widgets = {
+            'full_name': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter your full name',
+                'autocomplete': 'name',
+            }),
+            'email': forms.EmailInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Enter your email',
+                'autocomplete': 'email',
+            }),
+        }
 
+        #TODO: Find out why these aren't working
+        #
+        #     'password1': forms.PasswordInput(attrs={
+        #         'class': 'form-control',
+        #         'placeholder': 'Enter your password',
+        #         'autocomplete': 'new-password',
+        #     }),
+        #     'password2': forms.PasswordInput(attrs={
+        #         'class': 'form-control',
+        #         'placeholder': 'Re-enter your password',
+        #         'autocomplete': 'new-password',
+        #     }),
+        # }
 
 class CustomUserCreationForm(CustomUserBaseForm):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['full_name'].label = 'Your name'
+
+        self.fields['full_name'].label = 'Your Name'
         self.fields['email'].label = 'Email'
         self.fields['password1'].label = 'Password'
-        self.fields['password2'].label = 'Re-enter password'
+        self.fields['password2'].label = 'Confirm Password'
+
+        self.fields['password1'].widget = PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your password',
+            'autocomplete': 'new-password',
+        })
+        self.fields['password2'].widget = PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Re-enter your password',
+            'autocomplete': 'new-password',
+        })
 
         for field_name, field in self.fields.items():
             field.help_text = ''
 
 
 class CustomAuthenticationForm(AuthenticationForm):
-    username = forms.EmailField(label='Email', widget=forms.EmailInput(attrs={'class': 'form-control', 'autocomplete': 'email'}))
+    error_messages = {
+        'invalid_login': "Your email or password is incorrect. Please try again.",
+        'inactive': "This account is inactive.",
+    }
+
+    username = forms.EmailField(
+        label='Email',
+        widget=forms.EmailInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your email',
+            'autocomplete': 'email',
+        })
+    )
+    password = forms.CharField(
+        label='Password',
+        widget=forms.PasswordInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Enter your password',
+            'autocomplete': 'current-password',
+        })
+    )
 
     def clean_username(self):
         email = self.cleaned_data.get('username')
@@ -62,11 +120,11 @@ class ProfileEditForm(forms.ModelForm):
                 attrs={'type': 'date'},
                 format='%Y-%m-%d'
             ),
+            'profile_picture': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # todo: make the form auto populate image, upload it only if it doesnt already exists and show preview
 
         if self.instance and self.instance.date_of_birth:
             formatted_date = self.instance.date_of_birth.strftime('%Y-%m-%d')
