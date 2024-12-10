@@ -1,8 +1,9 @@
 from datetime import date
 
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404, redirect
@@ -11,7 +12,8 @@ from django.views.generic import CreateView, DetailView, UpdateView, ListView
 from book_nexus.accounts.forms import CustomUserCreationForm, ProfileEditForm
 from book_nexus.accounts.models import Profile, Follow
 from book_nexus.books.mixins import BookQuerysetMixin
-from book_nexus.books.models import Book, Rating
+from book_nexus.books.models import Book
+from book_nexus.mixins import ModeratorsPermission
 from book_nexus.reading_list.mixins import UserReadingListMixin
 from book_nexus.reading_list.models import WantToRead, CurrentlyReading, Read, Favorites
 
@@ -23,6 +25,15 @@ class UserRegistrationView(CreateView):
     form_class = CustomUserCreationForm
     template_name = 'accounts/register.html'
     success_url = reverse_lazy('home')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        messages.success(self.request, 'Your account has been created successfully. You can now log in.')
+        return response
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'There was an error creating your account. Please check the form below.')
+        return super().form_invalid(form)
 
 
 class UserLoginView(LoginView):
@@ -50,24 +61,24 @@ class UserDetailsView(LoginRequiredMixin, DetailView):
         context['favorites_books'] = Favorites.objects.filter(user=user)
 
         context['ratings_count'] = user.ratings.all().count()
-        context['avg_ratings'] = user.ratings.aggregate(Avg('rating'))['rating__avg']
+        avg_rating = user.ratings.aggregate(Avg('rating'))['rating__avg']
+        context['avg_ratings'] = round(avg_rating, 2) if avg_rating is not None else 0
         context['reviews_count'] = user.review_set.all().count()
 
         return context
 
 
-class UserEditView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+class UserEditView(LoginRequiredMixin, ModeratorsPermission, UpdateView):
     model = Profile
     form_class = ProfileEditForm
     template_name = 'accounts/profile-edit.html'
     success_url = reverse_lazy('profile_details')
 
     def test_func(self):
-        profile = get_object_or_404(Profile, pk=self.kwargs['pk'])
+        user = self.get_object()
         return (
-                self.request.user == profile.user or
-                self.request.user.is_superuser or
-                self.request.user.groups.filter(name='Moderators').exists()
+                super().test_func() or
+                self.request.user == user.user
         )
 
     def get_success_url(self):
@@ -95,7 +106,7 @@ def unfollow_user(request, user_pk):
 
 class UserReadingListView(BookQuerysetMixin, UserReadingListMixin, ListView):
     model = Book
-    template_name = 'books/book-list.html'
+    template_name = 'accounts/user-reading-list.html'
     context_object_name = 'books'
     paginate_by = 10
 

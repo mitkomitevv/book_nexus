@@ -55,6 +55,11 @@ class BookBaseForm(forms.ModelForm):
             'genre': forms.TextInput(attrs={'placeholder': "Enter the Book's Genre"}),
             'summary': forms.Textarea(attrs={'placeholder': 'Book summary'}),
             'publication_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'cover': forms.FileInput(attrs={'class': 'form-control'}),
+        }
+
+        labels = {
+            'cover': 'Cover Image',
         }
 
     def save(self, commit=True):
@@ -150,7 +155,7 @@ class AuthorBaseForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
-            'picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'picture': forms.FileInput(attrs={'class': 'form-control'}),
         }
 
 class AuthorCreateForm(AuthorBaseForm):
@@ -158,7 +163,4 @@ class AuthorCreateForm(AuthorBaseForm):
 
 
 class AuthorUpdateForm(AuthorBaseForm):
-        pass
-
-class AuthorDeleteForm(AuthorBaseForm):
         pass

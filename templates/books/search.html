@@ -1,0 +1,26 @@
+{% extends 'common/base.html' %}
+{% load static %}
+
+{% block content %}
+
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 col-lg-7">
+
+                {% if books %}
+                    <h2 class="mb-4">Your search results for "{{ query }}"</h2>
+                {% else %}
+                    <div class="text-center">
+                        <h2 class="mb-4">No results found for "{{ query }}". Try a different search.</h2>
+                        <img src="{% static 'images/book.png' %}" alt="book img" class="img-fluid">
+                    </div>
+                {% endif %}
+            
+                {% include 'books/book_list.html' %}
+            
+            </div>
+        </div>
+    </div>
+
+
+{% endblock %}

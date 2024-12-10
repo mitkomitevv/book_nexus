@@ -1,44 +1,46 @@
 {% extends 'common/base.html' %}
-{% load custom_tags %}
 
 {% block content %}
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <h1 class="text-center mb-4">Login</h1>
-            <form method="post">
-                {% csrf_token %}
-                <div class="col-md-9 mx-auto">
+    <div class="container pb-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-4 mx-auto">
+                <h1 class="text-center mb-4">Login</h1>
+                <form method="post" class="mb-5">
+                    {% csrf_token %}
+                    
                     {% if form.non_field_errors %}
                         <div class="alert alert-danger">
                             {{ form.non_field_errors }}
                         </div>
                     {% endif %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            <input
-                                    type="{{ field.field.widget.input_type }}"
-                                    name="{{ field.html_name }}"
-                                    id="{{ field.id_for_label }}"
-                                    class="form-control"
-                                    value="{{ field.value|default_if_none:'' }}"
-                                    autocomplete="email"
-                            >
-                            {% if field.errors %}
-                                <div class="text-danger">
-                                    {{ field.errors }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                    <div class="d-grid">
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">{{ form.username.label }}</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger">
+                                {{ form.username.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger">
+                                {{ form.password.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4 mb-4">
                         <button class="btn btn-dark" type="submit">Login</button>
                     </div>
-                    <p>Don't have an account? <a class="btn-link" href="{% url 'register' %}">Sign up</a></p>
-                </div>
-            </form>
+                    
+                    <p class="text-center">Don't have an account? <a class="btn-link" href="{% url 'register' %}">Sign up</a></p>
+                </form>
+            </div>
         </div>
     </div>
 {% endblock %}
-
-{#TODO: Fix email field not autocompleting emails#}

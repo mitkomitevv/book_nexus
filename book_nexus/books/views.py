@@ -1,5 +1,5 @@
 from django.contrib import messages
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import PageNotAnInteger, EmptyPage, Paginator
 from django.db.models import Avg, Count, Prefetch, Q
 from django.http import JsonResponse, Http404
@@ -12,8 +12,9 @@ from django.views.generic import CreateView, ListView, DetailView, UpdateView, D
 
 from book_nexus.books.decorators import librarian_required
 from book_nexus.books.forms import BookCreateForm, AuthorCreateForm, BookUpdateForm, ReviewForm, AuthorUpdateForm
-from book_nexus.books.mixins import BookQuerysetMixin, LibrariansPermission, ModeratorsPermission
+from book_nexus.books.mixins import BookQuerysetMixin
 from book_nexus.books.models import Book, Rating, Author, Review, Comment, Series
+from book_nexus.mixins import LibrariansPermission, ModeratorsPermission
 from book_nexus.reading_list.mixins import UserReadingListMixin
 
 
@@ -47,7 +48,7 @@ def book_delete_view(request, pk):
 
 class BookListView(BookQuerysetMixin ,UserReadingListMixin, ListView):
     model = Book
-    template_name = 'books/book-list.html'
+    template_name = 'books/all-books.html'
     context_object_name = 'books'
     paginate_by = 10
 
@@ -137,29 +138,27 @@ class AddReviewView(LoginRequiredMixin, CreateView):
         return reverse_lazy('book-details', kwargs={'pk': self.kwargs['pk']})
 
 
-class EditReviewView(LoginRequiredMixin, ModeratorsPermission, UpdateView):
-    model = Review
-    form_class = ReviewForm
-    success_url = reverse_lazy('show-all-books')
-
-    def get_object(self, queryset=None):
-        return get_object_or_404(Review, pk=self.kwargs['review_pk'])
-
+class EditReviewView(LoginRequiredMixin, ModeratorsPermission, View):
     def test_func(self):
-        review = self.get_object()
+        review = get_object_or_404(Review, pk=self.kwargs['review_pk'])
         return (
                 super().test_func() or
                 self.request.user == review.user
         )
 
-    def form_valid(self, form):
-        self.object = form.save()
-        messages.success(self.request, "Your review has been updated successfully.")
-        return JsonResponse({'success': True, 'message': 'Review updated successfully.'})
+    def post(self, request, review_pk):
+        review = get_object_or_404(Review, pk=review_pk)
 
-    def form_invalid(self, form):
-        errors = form.errors.as_json()
-        return JsonResponse({'success': False, 'message': 'There were errors in the form.', 'errors': errors})
+        if not self.test_func():
+            return JsonResponse({'success': False, 'message': 'Permission denied.'})
+
+        content = request.POST.get('content')
+        if content:
+            review.content = content
+            review.save()
+            return JsonResponse({'success': True, 'message': 'Review updated successfully.'})
+        else:
+            return JsonResponse({'success': False, 'message': 'Content cannot be empty.'})
 
 
 class DeleteReviewView(LoginRequiredMixin, ModeratorsPermission, View):
@@ -294,7 +293,7 @@ class RateBookView(LoginRequiredMixin, View):
             if rating_value:
                 rating_value = float(rating_value)
 
-                rating, created = Rating.objects.update_or_create(
+                _, _ = Rating.objects.update_or_create(
                     user=request.user,
                     book=book,
                     defaults={'rating': rating_value}
@@ -321,7 +320,6 @@ class RateBookView(LoginRequiredMixin, View):
             return JsonResponse({'success': False, 'message': str(e)})
 
 
-# TODO: PERMISSIONS!!!
 class AuthorCreateView(LoginRequiredMixin, LibrariansPermission, CreateView):
     model = Author
     form_class = AuthorCreateForm
@@ -341,7 +339,7 @@ class AuthorDetailsView(DetailView):
         return context
 
 
-class AuthorUpdateView(LoginRequiredMixin, UpdateView):
+class AuthorUpdateView(LoginRequiredMixin,LibrariansPermission, UpdateView):
     model = Author
     form_class = AuthorUpdateForm
     template_name = 'authors/author-edit.html'
@@ -349,12 +347,20 @@ class AuthorUpdateView(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse_lazy('author-details', kwargs={'pk': self.object.pk})
 
-class AuthorDeleteView(LoginRequiredMixin, DeleteView):
+class AuthorDeleteView(LoginRequiredMixin, LibrariansPermission, DeleteView):
     model = Author
+    success_url = reverse_lazy('show-all-books')
+
+    def delete(self, request, *args, **kwargs):
+        if not self.test_func():
+            messages.error(request, 'You do not have permission to delete this author.')
+            return redirect('author-details', pk=self.kwargs['pk'])
+        messages.success(request, 'Author deleted successfully.')
+        return super().delete(request, *args, **kwargs)
 
 class ShowAuthorBooksView(BookQuerysetMixin, UserReadingListMixin, ListView):
     model = Book
-    template_name = 'books/book-list.html'
+    template_name = 'authors/author-books.html'
     context_object_name = 'books'
 
     def get_queryset(self):
@@ -373,7 +379,7 @@ class ShowAuthorBooksView(BookQuerysetMixin, UserReadingListMixin, ListView):
 
 class BookSearchView(BookQuerysetMixin, UserReadingListMixin, ListView):
     model = Book
-    template_name = 'books/book-list.html'
+    template_name = 'books/search.html'
     context_object_name = 'books'
     paginate_by = 10
 
