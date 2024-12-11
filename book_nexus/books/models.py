@@ -8,31 +8,21 @@ UserModel = get_user_model()
 
 
 class Book(models.Model):
-    title = models.CharField(
-        max_length=50
-    )
+    title = models.CharField(max_length=50)
 
-    genre = models.CharField(
-        max_length=30
-    )
+    genre = models.CharField(max_length=30)
 
-
-    summary = models.TextField(
-        blank=True,
-        null=True
-    )
+    summary = models.TextField(blank=True, null=True)
 
     pages = models.PositiveIntegerField()
 
-    publication_date = models.DateField(
-        default=date.today
-    )
+    publication_date = models.DateField(default=date.today)
 
-    cover = CloudinaryField('image', blank=True, null=True)
+    cover = CloudinaryField("image", blank=True, null=True)
 
     authors = models.ManyToManyField(
-        'Author',
-        related_name='books',
+        "Author",
+        related_name="books",
     )
 
     created_at = models.DateTimeField(
@@ -40,22 +30,18 @@ class Book(models.Model):
     )
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ["-created_at"]
 
     def __str__(self):
         return self.title
 
 
 class Author(models.Model):
-    name = models.CharField(
-        max_length=50
-    )
+    name = models.CharField(max_length=50)
 
-    bio = models.TextField(
-        blank=True
-    )
+    bio = models.TextField(blank=True)
 
-    picture = CloudinaryField('image', blank=True, null=True)
+    picture = CloudinaryField("image", blank=True, null=True)
 
     def __str__(self):
         return self.name
@@ -63,35 +49,24 @@ class Author(models.Model):
 
 class Rating(models.Model):
     user = models.ForeignKey(
-        UserModel,
-        on_delete=models.CASCADE,
-        related_name='ratings'
+        UserModel, on_delete=models.CASCADE, related_name="ratings"
     )
 
-    book = models.ForeignKey(
-        'Book',
-        related_name='ratings',
-        on_delete=models.CASCADE
-    )
+    book = models.ForeignKey("Book", related_name="ratings", on_delete=models.CASCADE)
 
     rating = models.FloatField()
 
     class Meta:
-        unique_together = ('user', 'book')
+        unique_together = ("user", "book")
 
     def __str__(self):
         return f"{self.user} - {self.book}: {self.rating}"
 
 
 class Series(models.Model):
-    name = models.CharField(
-        max_length=50
-    )
+    name = models.CharField(max_length=50)
 
-    authors = models.ManyToManyField(
-        'Author',
-        related_name='series'
-    )
+    authors = models.ManyToManyField("Author", related_name="series")
 
     def __str__(self):
         return self.name
@@ -99,68 +74,44 @@ class Series(models.Model):
 
 class SeriesBook(models.Model):
     series = models.ForeignKey(
-        'Series',
-        on_delete=models.CASCADE,
-        related_name='series_books'
+        "Series", on_delete=models.CASCADE, related_name="series_books"
     )
 
     book = models.ForeignKey(
-        'Book',
-        on_delete=models.CASCADE,
-        related_name='series_books'
+        "Book", on_delete=models.CASCADE, related_name="series_books"
     )
 
     number = models.PositiveIntegerField()
 
     class Meta:
-        unique_together = [('series', 'number'), ('series', 'book')]
-        ordering = ['number']
+        unique_together = [("series", "number"), ("series", "book")]
+        ordering = ["number"]
 
     def __str__(self):
         return f"{self.series.name} - {self.number}: {self.book.title}"
 
 
 class Review(models.Model):
-    user = models.ForeignKey(
-        UserModel,
-        on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
 
-    book = models.ForeignKey(
-        'Book',
-        on_delete=models.CASCADE,
-        related_name='reviews'
-    )
+    book = models.ForeignKey("Book", on_delete=models.CASCADE, related_name="reviews")
 
     content = models.TextField()
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 class Comment(models.Model):
     review = models.ForeignKey(
-        'Review',
-        on_delete=models.CASCADE,
-        related_name='comments'
+        "Review", on_delete=models.CASCADE, related_name="comments"
     )
 
-    user = models.ForeignKey(
-        UserModel,
-        on_delete=models.CASCADE
-    )
+    user = models.ForeignKey(UserModel, on_delete=models.CASCADE)
 
     content = models.TextField()
 
-    created_at = models.DateTimeField(
-        auto_now_add=True
-    )
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    updated_at = models.DateTimeField(
-        auto_now=True
-    )
+    updated_at = models.DateTimeField(auto_now=True)

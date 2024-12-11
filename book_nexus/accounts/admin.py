@@ -9,12 +9,10 @@ UserModel = get_user_model()
 class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
-    verbose_name_plural = 'Profile'
-    fk_name = 'user'
+    verbose_name_plural = "Profile"
+    fk_name = "user"
 
 
 @admin.register(UserModel)
 class UserModelAdmin(admin.ModelAdmin):
     inlines = (ProfileInline,)
-
-

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('books', '0014_remove_review_rating'),
+        ("books", "0014_remove_review_rating"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='series',
-            name='authors',
-            field=models.ManyToManyField(related_name='series', to='books.author'),
+            model_name="series",
+            name="authors",
+            field=models.ManyToManyField(related_name="series", to="books.author"),
         ),
     ]
