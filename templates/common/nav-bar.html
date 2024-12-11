@@ -28,6 +28,11 @@
                         <a class="nav-link text-black" href="{% url 'author-create' %}">Add Author</a>
                     </li>
                 {% endif %}
+                 {% if user.is_superuser or user|has_group:'Librarians' or user|has_group:'Moderators' %}
+                    <li class="nav-item">
+                        <a class="nav-link text-black" href="{% url 'admin:index' %}">Admin Panel</a>
+                    </li>
+                {% endif %}
                 <li class="nav-item">
                     <a class="nav-link text-black" href="{% url 'show-all-books' %}">Books</a>
                 </li>

@@ -117,7 +117,7 @@ class UserReadingListView(BookQuerysetMixin, UserReadingListMixin, ListView):
     model = Book
     template_name = "accounts/user-reading-list.html"
     context_object_name = "books"
-    paginate_by = 10
+    paginate_by = 2
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -152,6 +152,9 @@ class UserReadingListView(BookQuerysetMixin, UserReadingListMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["list_type"] = " ".join(self.request.GET.get("list", "read").split("-"))
+        context["list_type"] = self.request.GET.get("list", "read")
         context["user_data"] = get_object_or_404(UserModel, pk=self.kwargs["pk"])
+
+        list_type = self.request.GET.get("list", "read")
+        context["query_params"] = f"&list={list_type}"
         return context

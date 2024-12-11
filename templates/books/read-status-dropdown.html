@@ -6,10 +6,10 @@
             Want to Read
         {% elif book.pk in currently_reading_books %}
             Currently Reading
-        {% elif book.pk in read_books %}
-            Read
         {% elif book.pk in favorites_books %}
             Favorites
+        {% elif book.pk in read_books %}
+            Read
         {% else %}
             Add to List
         {% endif %}
