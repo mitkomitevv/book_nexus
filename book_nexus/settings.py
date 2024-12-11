@@ -27,11 +27,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "rest_framework",
     "drf_spectacular",
     "cloudinary",
     "cloudinary_storage",
     "django_select2",
+
     "book_nexus.accounts.apps.AccountsConfig",
     "book_nexus.books.apps.BooksConfig",
     "book_nexus.reading_list.apps.ReadingListConfig",
@@ -46,7 +48,7 @@ JAZZMIN_SETTINGS = {
     "site_icon": "images/bookshelf.png",
     "show_ui_builder": True,
 
-    # "site_logo": "your_logo_path.png",  Add a static logo here if desired
+    "site_logo": "images/logo.png",
 
     "welcome_sign": "Welcome to Book Nexus Admin",
     "icons": {
