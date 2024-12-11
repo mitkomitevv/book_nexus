@@ -10,6 +10,9 @@
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
+        {% if user.is_superuser or user|has_group:'Librarians' or user|has_group:'Moderators' %}
+                <a class="nav-link text-black" href="{% url 'admin:index' %}">Admin Panel</a>
+        {% endif %}
         <form method="get" action="{% url 'search-books' %}" class="d-flex">
             <div class="input-group wide-search">
                 <input type="text" name="q" placeholder="Search for books, authors, series ..." class="form-control">
@@ -28,11 +31,7 @@
                         <a class="nav-link text-black" href="{% url 'author-create' %}">Add Author</a>
                     </li>
                 {% endif %}
-                 {% if user.is_superuser or user|has_group:'Librarians' or user|has_group:'Moderators' %}
-                    <li class="nav-item">
-                        <a class="nav-link text-black" href="{% url 'admin:index' %}">Admin Panel</a>
-                    </li>
-                {% endif %}
+   
                 <li class="nav-item">
                     <a class="nav-link text-black" href="{% url 'show-all-books' %}">Books</a>
                 </li>

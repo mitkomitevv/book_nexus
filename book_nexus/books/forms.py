@@ -136,7 +136,7 @@ class BookCreateForm(BookBaseForm):
 class BookUpdateForm(BookBaseForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # todo: make the form auto populate image, upload it only if it doesnt already exists and show preview
+
         if self.instance and self.instance.pk:
             series_books = self.instance.series_books.all()
 
@@ -174,8 +174,16 @@ class AuthorBaseForm(forms.ModelForm):
         model = Author
         fields = "__all__"
         widgets = {
-            "name": forms.TextInput(attrs={"class": "form-control"}),
-            "bio": forms.Textarea(attrs={"class": "form-control", "rows": 5}),
+            "name": forms.TextInput(
+                attrs={"class": "form-control", "placeholder": "Enter Author Name"}
+            ),
+            "bio": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "rows": 5,
+                    "placeholder": "Enter Author Biography",
+                }
+            ),
             "picture": forms.FileInput(attrs={"class": "form-control"}),
         }
 
