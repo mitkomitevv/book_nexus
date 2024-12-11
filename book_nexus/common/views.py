@@ -11,7 +11,6 @@ class HomeView(UserReadingListMixin, ListView):
     context_object_name = "reviews"
     paginate_by = 10
 
-
     def get_queryset(self):
         if self.request.user.is_authenticated:
             followed_user_ids = self.request.user.following.values_list(

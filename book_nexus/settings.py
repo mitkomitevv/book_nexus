@@ -44,19 +44,15 @@ INSTALLED_APPS = [
 
 JAZZMIN_SETTINGS = {
     "site_title": "Book Nexus Admin",
-    "site_header": "Book Nexus",
+    "site_brand": "Book Nexus",
     "site_icon": "images/bookshelf.png",
     "show_ui_builder": True,
-
     "site_logo": "images/logo.png",
-
     "welcome_sign": "Welcome to Book Nexus Admin",
     "icons": {
         "accounts.CustomUser": "fas fa-user",
         "accounts.Follow": "fa-solid fa-plus",
-
         "auth.Group": "fa-solid fa-people-group",
-
         "books.Book": "fa-solid fa-book-open-reader",
         "books.Author": "fas fa-user",
         "books.Review": "fa-regular fa-message",
@@ -64,7 +60,6 @@ JAZZMIN_SETTINGS = {
         "books.Comment": "fa-solid fa-comments",
         "books.Series": "fas fa-book",
         "books.SeriesBook": "fas fa-book",
-
         "reading_list.WantToRead": "fa-solid fa-book-bookmark",
         "reading_list.CurrentlyReading": "fa-solid fa-book-open",
         "reading_list.Read": "fa-solid fa-book-journal-whills",

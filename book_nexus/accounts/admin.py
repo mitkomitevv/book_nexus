@@ -13,7 +13,14 @@ class ProfileInline(admin.StackedInline):
 @admin.register(CustomUser)
 class UserModelAdmin(admin.ModelAdmin):
     inlines = (ProfileInline,)
-    list_display = ("email", "full_name", "is_active", "is_staff", "is_superuser", "date_joined")
+    list_display = (
+        "email",
+        "full_name",
+        "is_active",
+        "is_staff",
+        "is_superuser",
+        "date_joined",
+    )
     search_fields = ("email", "full_name")
     list_filter = ("is_active", "is_staff", "date_joined")
     ordering = ("-date_joined",)

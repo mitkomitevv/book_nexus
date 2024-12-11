@@ -53,7 +53,6 @@ class ReviewAdmin(admin.ModelAdmin):
 
 @admin.register(Comment)
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ("review", "user", "created_at", "updated_at")
+    list_display = ("review", "user","review__book", "created_at", "updated_at")
     search_fields = ("user__email", "review__content", "content")
     list_filter = ("created_at", "updated_at")
-
