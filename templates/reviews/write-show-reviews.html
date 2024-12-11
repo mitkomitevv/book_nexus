@@ -7,13 +7,7 @@
         <h5 class="card-title">Your Review</h5>
         <div class="card mt-2">
             <div class="card-body">
-                {#                <p class="review-content">{{ user_review.content }}</p>#}
-                {#                {% if user_review.created_at|dates_different:user_review.updated_at %}#}
-                {#                    <small class="text-muted">Last updated: {{ user_review.updated_at|date:"F d, Y H:i" }}</small>#}
-                {#                {% else %}#}
-                {#                    <small class="text-muted">{{ user_review.created_at|date:"F d, Y H:i" }}</small>#}
-                {#                {% endif %}#}
-
+            
                 <div class="me-4">
                     <a href="{% url 'profile_details' user_review.user.pk %}">
                         {% if user_review.user.profile.profile_picture %}

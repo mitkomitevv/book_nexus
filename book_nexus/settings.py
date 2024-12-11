@@ -52,18 +52,27 @@ JAZZMIN_SETTINGS = {
 
     "welcome_sign": "Welcome to Book Nexus Admin",
     "icons": {
-        "books.Book": "fas fa-book",
+        "accounts.CustomUser": "fas fa-user",
+        "accounts.Follow": "fa-solid fa-plus",
+
+        "auth.Group": "fa-solid fa-people-group",
+
+        "books.Book": "fa-solid fa-book-open-reader",
         "books.Author": "fas fa-user",
-        "books.Review": "fas fa-star",
+        "books.Review": "fa-regular fa-message",
+        "books.Rating": "fas fa-star",
+        "books.Comment": "fa-solid fa-comments",
+        "books.Series": "fas fa-book",
+        "books.SeriesBook": "fas fa-book",
+
+        "reading_list.WantToRead": "fa-solid fa-book-bookmark",
+        "reading_list.CurrentlyReading": "fa-solid fa-book-open",
+        "reading_list.Read": "fa-solid fa-book-journal-whills",
+        "reading_list.Favorites": "fa-solid fa-heart",
     },
     "topmenu_links": [
         {"name": "Home", "url": "/", "permissions": ["auth.view_user"]},
     ],
-    "models": {
-        "book.Book": {"icon": "fas fa-book", "show_sidebar": True},
-        "book.Author": {"icon": "fas fa-user"},
-        "book.Review": {"icon": "fa-star"},
-    },
 }
 
 
