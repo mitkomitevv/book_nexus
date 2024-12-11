@@ -7,28 +7,58 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('books', '0009_alter_rating_rating'),
+        ("books", "0009_alter_rating_rating"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Series',
+            name="Series",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=50)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=50)),
             ],
         ),
         migrations.CreateModel(
-            name='SeriesBook',
+            name="SeriesBook",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('number', models.PositiveIntegerField()),
-                ('book', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='series_books', to='books.book')),
-                ('series', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='series_books', to='books.series')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("number", models.PositiveIntegerField()),
+                (
+                    "book",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="series_books",
+                        to="books.book",
+                    ),
+                ),
+                (
+                    "series",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="series_books",
+                        to="books.series",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['number'],
-                'unique_together': {('series', 'number')},
+                "ordering": ["number"],
+                "unique_together": {("series", "number")},
             },
         ),
     ]

@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('books', '0015_series_authors'),
+        ("books", "0015_series_authors"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='book',
-            name='authors',
-            field=models.ManyToManyField(related_name='books', to='books.author'),
+            model_name="book",
+            name="authors",
+            field=models.ManyToManyField(related_name="books", to="books.author"),
         ),
     ]

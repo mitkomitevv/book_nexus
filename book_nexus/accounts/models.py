@@ -13,26 +13,18 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         unique=True,
     )
 
-    full_name = models.CharField(
-        max_length=50
-    )
+    full_name = models.CharField(max_length=50)
 
-    date_joined = models.DateTimeField(
-        auto_now_add=True
-    )
+    date_joined = models.DateTimeField(auto_now_add=True)
 
-    is_active = models.BooleanField(
-        default=True
-    )
+    is_active = models.BooleanField(default=True)
 
-    is_staff = models.BooleanField(
-        default=False
-    )
+    is_staff = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['full_name']
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["full_name"]
 
     def __str__(self):
         return self.email
@@ -70,7 +62,7 @@ class Profile(models.Model):
         null=True,
     )
 
-    profile_picture = CloudinaryField('image', blank=True, null=True)
+    profile_picture = CloudinaryField("image", blank=True, null=True)
 
     def __str__(self):
         return self.user.full_name
@@ -78,19 +70,15 @@ class Profile(models.Model):
 
 class Follow(models.Model):
     follower = models.ForeignKey(
-        to=UserModel,
-        on_delete=models.CASCADE,
-        related_name='following'
+        to=UserModel, on_delete=models.CASCADE, related_name="following"
     )
     followed_user = models.ForeignKey(
-        to=UserModel,
-        on_delete=models.CASCADE,
-        related_name='followers'
+        to=UserModel, on_delete=models.CASCADE, related_name="followers"
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('follower', 'followed_user')
+        unique_together = ("follower", "followed_user")
 
     def __str__(self):
         return f"{self.follower.full_name} follows {self.followed_user.full_name}"

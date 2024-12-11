@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('books', '0008_alter_rating_user'),
+        ("books", "0008_alter_rating_user"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='rating',
-            name='rating',
+            model_name="rating",
+            name="rating",
             field=models.FloatField(),
         ),
     ]
