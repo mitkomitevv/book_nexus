@@ -61,7 +61,7 @@
                         {% include 'books/book-star-rating.html' %}
                         
                     </span>
-                    <span class="average-rating">{{ average_rating|default:'' }}</span>
+                    <span class="average-rating">{{ average_rating|floatformat:2 }}</span>
                     <span class="rating-count-review">
                         {% if rating_count != 1 %}
                             <small class="text-muted">{{ rating_count }} ratings</small>
